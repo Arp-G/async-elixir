@@ -1,7 +1,0 @@
-# Async Elixir
-
-## Section
-
-```elixir
-
-```

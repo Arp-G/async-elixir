@@ -1,0 +1,58 @@
+# Concurrency in Elixir
+
+```elixir
+Mix.install([])
+```
+
+## Concurrency vs Parallelism
+
+Concurrency and parallelism are often used interchangeably but are two distinct concepts. Concurrency refers to the execution of multiple tasks that overlap in time, with each task being interrupted and resumed intermittently by the CPU(context switching). This can create an illusion of tasks running simultaneously, but in reality, they are taking turns executing on a single time-sliced CPU.
+
+Parallelism, on the other hand, involves the simultaneous execution of multiple tasks on a hardware system that has multiple computing resources, such as a multi-core CPU. Parallelism allows tasks to run literally at the same time, without having to share CPU time.
+
+In essence, concurrency deals with handling multiple tasks at once, while parallelism deals with actually performing multiple tasks at the same time. While a system can exhibit both concurrency and parallelism, it is possible to have a concurrent system that is not parallel.
+
+<!-- livebook:{"break_markdown":true} -->
+
+![](images/concurrent_vs_parallel.svg)
+
+<!-- livebook:{"break_markdown":true} -->
+
+In todays world with machines having power multi-core CPUs writing code that can run cocurrently and parallely can lead to huge performance benifits. We should strive to leverage the capabilities of modern hardware advancements by writing code that can fully utilize them.
+
+Furthermore, as we develop software, we often encounter problems that require background tasks and can benefit greatly from the use of parallel programming. Examples of such tasks include image processing, video transcoding, and make third party api calls, to name a few.
+
+## Concurrency and parallelism in Elixir
+
+Due to the functional and immutable nature of Elixir writing parallel and concurrent code becomes much simpler. Unlike many other languages that require locks and mutexes to handle issues related to shared state in parallel programming, Elixir's design mitigates these problems. As a result, parallel and concurrent code is a first-class citizen in Elixir, requiring less effort and complexity to implement effectively.
+
+<!-- livebook:{"break_markdown":true} -->
+
+In Elixir, **the Erlang Virtual Machine (BEAM)** serves as the backbone for managing concurrency and parallelism. Let's take a closer look at how it works under the hood to provide us with these superpowers.
+
+Elixir leverages lightweight processes that are expertly managed by the VM. These processes are not true OS processes, making them highly lightweight and allowing for thousands or even [millions](https://phoenixframework.org/blog/the-road-to-2-million-websocket-connections) of them to run concurrently without impacting performance.
+
+This lightweight process model has given rise to several powerful applications, including the [Cowboy web server](https://github.com/ninenines/cowboy) which creates a process for every incoming web request to keep heavy work or errors within a single request from affecting others. Other examples include [Phoenix Channels](https://hexdocs.pm/phoenix/channels.html) and [Phoenix live view](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html) that employ an Erlang process per WebSocket connection.
+
+<!-- livebook:{"break_markdown":true} -->
+
+#### Scheduling in BEAM
+
+BEAM, the underlying virtual machine, employs a single OS thread per core, and each thread runs its own scheduler. Every scheduler is responsible for pulling processes from its own run queue, with the BEAM being responsible for populating these queues with Erlang processes for execution.
+
+(Note: To utilize more than one core the Erlang Runtime System Application(ERTS) has to be built in SMP mode. SMP stands for Symmetric MultiProcessing, that is, the ability to execute a processes on any one of multiple CPUs.)
+
+The scheduler manages two queues: a ready queue containing processes that are prepared to run and a waiting queue containing processes that are waiting to receive a message.
+
+When a process is selected from the ready queue, it is handed over to BEAM for the execution of one CPU time slice. BEAM interrupts the running process and places it at the end of the ready queue when the time slice expires. However, if the process is blocked in a receive operation before the time slice runs out, it is added to the waiting queue.
+
+A load balancer is also in place, responsible for executing migration logic to allocate processes across the run queues on separate cores. This logic assists in maintaining load balance by taking jobs away from overloaded queues (known as [task stealing](https://blog.stenmans.org/theBeamBook/#_task_stealing)) and assigning them to empty or underloaded queues (known as ["task migration"](https://blog.stenmans.org/theBeamBook/#_migration)). The load balancer strives to maintain an equal maximum number of run-able processes across schedulers.
+
+<!-- livebook:{"break_markdown":true} -->
+
+![](images/beam_scheduling_architecture.svg)
+
+## Resources
+
+* https://medium.com/flatiron-labs/elixir-and-the-beam-how-concurrency-really-works-3cc151cddd61
+* https://blog.stenmans.org/theBeamBook/#CH-Scheduling
