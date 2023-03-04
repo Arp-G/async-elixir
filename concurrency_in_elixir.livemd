@@ -52,6 +52,19 @@ A load balancer is also in place, responsible for executing migration logic to a
 
 ![](images/beam_scheduling_architecture.svg)
 
+<!-- livebook:{"break_markdown":true} -->
+
+You can find the numer of schedulers in your IEX session using the `System.schedulers/0` function.
+
+```elixir
+# Returns the number of schedulers online in the VM.
+System.schedulers()
+
+# Returns the number of schedulers online in the VM.
+# Here online means total number of schedulers which are active and actually being used.
+System.schedulers_online()
+```
+
 ## Resources
 
 * https://medium.com/flatiron-labs/elixir-and-the-beam-how-concurrency-really-works-3cc151cddd61

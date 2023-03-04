@@ -1,0 +1,128 @@
+# Immutability and memory management
+
+## Immutability in elixir
+
+Variables are like labels in elixir. The value pointed to by a variable is immutable however the label for that value can change. This means you can bind the same value to different labels or variables.
+
+In Erlang you cannot rebind a variable,
+This is invalid since we cannot rebind variables
+
+```
+X = 5,
+X = X * 10.  % exception error: no match of right hand side value 50
+```
+
+However, elixir allows us to rebind values and therefore this code would work in elixir.
+This is because in erlang the `=` operator is not an assignement operator but a match operator therefore in the above code `X = X * 10` means `5 = 50` which would'nt match.
+
+In elixir we can use the `^` (pin) operator to force matching, for example
+
+```
+iex(1)> x = 5
+5
+iex(2)> x = x * 10  # Assignment
+50
+iex(3)> ^x = x * 10 # Matching
+** (MatchError) no match of right hand side value: 500
+    (stdlib 4.0.1) erl_eval.erl:496: :erl_eval.expr/6
+    iex:3: (file)
+```
+
+Whenever some input is passed into a function to be transformed, the original value remains unchanged and a new value is created.
+
+This allows for safe concurrent access to the same data by n processes since there is no shared memory thats getting mutated by multiple processes. It makes concurrency easier to manage, as it is guaranteed that no process can change the original data. Any transformation on the original data will result in new data being created.
+
+## Example of immutability & closures in elixir
+
+```elixir
+list = [1, 2, 3, 4]
+
+# Returns a new list
+Enum.filter(list, fn num -> num > 2 end)
+
+# [1, 2, 3, 4] Original list remains unchanged
+list
+```
+
+```elixir
+x = 1
+
+# An anonymous function
+anon = fn ->
+  # Closure captures the value of x
+  IO.puts(x)
+  x = 0
+end
+
+# Outputs 1
+anon.()
+
+# Outputs 1
+IO.puts(x)
+
+x = 5
+
+# Outputs 1
+anon.()
+```
+
+## Persistent DS
+
+As you can imagine, performing a full copy any time something changes would be prohibitively expensive,and any run-time that had immutable data implemented this way would be unusable
+in a real-world environment due to the performance overhead. Luckily there is a class
+of data structures that make this possible in an efficient manner and they are called
+persistent data structures.[1]
+Persistent data structures are data structures that can be changed whilst always
+maintaining a history of all changes that occurred to the data (without a full copy).
+Under the hood, the BEAM leverages persistent data structures in order to provide
+immutability as a first-class citizen while not having to copy the entire data structure
+any time something changes (with the exceptions of when data is passed between
+processes or when data is extracted from native data stores like ETS).
+
+For example, Elixir lists are linked lists, and a linked list (Tree with one branch)
+
+```
+Elixir: list = [1, 2, 3, 4]
+Tree:   1 -> 2 -> 3 -> 4
+Every time you prepend an element to a list, it will share its tail:
+
+Elixir: [0|list]
+Tree:   0 -> (1 -> 2 -> 3 -> 4)
+```
+
+## Garbage Collection
+
+Erlang’s GC mechanism concisely we can say; it is a ***Generational Copying***
+**garbage collection that runs inside each Erlang process private heap independently**, and also a *Reference Counting* **garbage collection occurs for global shared heap.**
+
+Generational GC divides the heap into two segments: young and old generations. This separation is based on the fact that if an object survives a GC cycle the chances of it becoming garbage in short term is low. So the young generation is for newly allocated data, and old generation is for the data that have survived an implementation specific number of GC.
+
+**Scenarios of GC**
+
+Short-lived process: `Spawn > No GC > Terminate`
+
+process whose data grows more that *min_heap_size* uses fullsweep GC
+
+`Spawn > Fullsweep > Generational > Terminate`
+
+There are cases in a process lifetime when GC strategy switches from generational back to fullsweep again.
+
+`Spawn > Fullsweep > Generational > Fullsweep > Generational > ... > Terminate`
+
+If the second fullsweep GC cannot collect enough memory, then the heap size is increased and the GC strategy switches to fullsweep again
+
+`Spawn > Fullsweep > Generational > Fullsweep > Increase Heap > Fullsweep > ... > Terminate`
+
+**Shared Heap GC**
+
+The GC for shared heap is reference counting. Each object in shared heap (Refc) has a counter of references to it held by other objects (ProcBin) which are stored inside private heap of Erlang processes. If an object’s reference counter reaches zero, the object has become inaccessible and will be destroyed.
+
+## Resources
+
+* https://stackoverflow.com/questions/30203227/does-elixir-have-persistent-data-structures-similar-to-clojure
+
+* https://elixirpatterns.dev/
+
+* https://gist.github.com/josevalim/ce2f5871a96b6cbcf2c1
+
+* https://elixirforum.com/t/how-would-you-explain-elixir-immutability/47323/11
