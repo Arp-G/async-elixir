@@ -1,0 +1,97 @@
+# Group leaders and naming processes
+
+## Group Leader
+
+In Erlang, every process belongs to a process group, and each group has a group leader. The group leader is responsible for handling I/O for the processes in its group. When a process is spawned, it inherits the same group leader as its parent process. At system start-up, the init process is both its own group leader and the group leader of all processes.
+
+The Erlang VM models I/O devices as processes, which enables different nodes in the same network to exchange file processes and read/write files between nodes. The group leader can be configured per process and is used in different situations. For example, when executing code in a remote terminal, it ensures that messages from a remote node are redirected and printed in the terminal that triggered the request.
+
+The main responsibility of the group leader is to collect I/O output from all processes in its group and pass it to or from the underlying system. It essentially owns the standard input, standard output, and standard error channels on behalf of the group.
+
+When a file is opened using `File.open/2`, it returns a tuple like `{:ok, io_device}`, where `io_device` is the PID of the process that handles the file. This process monitors the process that opened the file (the owner process), and if the owner process terminates, the file is closed, and the process itself terminates too.
+
+When you call `IO.write(pid, binary)`, the IO module sends a message to the process identified by pid with the desired operation, such as :put_chars. 
+The message has the following structure: `{:io_request, <pid>, <reference>, {:put_chars, :unicode, "hello"}}`.
+
+When you write to :stdio, you are actually sending a message to the group leader, which writes to the standard-output file descriptor. 
+Therefore, these three code snippets are equivalent:
+
+```
+IO.puts "hello"
+IO.puts :stdio, "hello"
+IO.puts Process.group_leader, "hello"
+```
+
+To understand this better let see some examples
+
+Suppose we have two Erlang nodes named "node1" and "node2". 
+You can create two `iex` shells for this like
+
+```
+iex --sname node1@localhost
+iex --sname node2@localhost
+```
+
+(Note: If you want to send messages between nodes on different networks, we need to start the named nodes with a shared cookie)
+
+If we execute the following code in the iex shell of node1:
+
+```
+Node.spawn_link(:node2@localhost, fn ->
+  IO.puts("I will be executed on node2 but printed on node1 since the group leader is node1")
+end)
+```
+
+The output of the IO.puts operation will be sent to the group leader, which in this case is node1. 
+Therefore, the output will be printed on node1's standard output stream, even though the process that performed the operation is running on node2.
+
+On the other hand, if we specify the device PID as the `:init` process on node2, the output will be seen on node2's standard output stream:
+
+```
+Node.spawn_link(:node2@localhost, fn ->
+  init_process_pid = Process.whereis(:init)
+
+  IO.puts(
+    init_process_pid,
+    "I will be executed on node2 and printed on node2 since the device ID passed was node2's init process"
+  )
+end)
+```
+
+Finally, we can also set the group leader of a process explicitly by calling `Process.group_leader/2`. 
+In the following example, we set the group leader of the process running on node2 to node2's `:init` process:
+
+```
+Node.spawn_link(:node2@localhost, fn ->
+  init_process_pid = Process.whereis(:init)
+  Process.group_leader(self(), init_process_pid)
+
+  IO.puts(
+    "I will be executed on node2 and printed on node2 since the group leader is set to node2's init process"
+  )
+end)
+```
+
+In this case, the output of the `IO.puts` operation will be sent to node2's `:init` process, which is the new group leader of the process. 
+Therefore, the output will be printed on node2's standard output stream.
+
+## Process naming
+
+We can name processes and then refer to them via their registered name.
+
+```elixir
+Process.register(self(), :my_process)
+Process.registered() |> IO.inspect()
+
+send(:my_process, "Hello")
+Process.info(self(), :messages) |> IO.inspect()
+Process.unregister(:my_process)
+Process.registered() |> IO.inspect()
+```
+
+## Resources
+
+* https://www.erlang.org/doc/man/erlang.html#group_leader-0
+* https://stackoverflow.com/questions/36318766/what-is-a-group-leader
+* https://rokobasilisk.gitbooks.io/elixir-getting-started/content/io_and_the_file_system/processes_and_group_leaders.html
+* https://elixirschool.com/en/lessons/advanced/otp_distribution#a-note-on-io-and-nodes-2

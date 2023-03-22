@@ -1,0 +1,25 @@
+# Processes
+
+## What are processes?
+
+A process is a **self-contained** entity where code is executed. It safeguards the system from errors in our code by restricting the effects of the error to the process that is executing the faulty code. Processes have their own address space and can communicate with other processes via signals and messages, and their execution is managed by a preemptive scheduler.
+
+It is important to note that Elixir processes are not the same as operating system processes. Elixir processes are remarkably **lightweight** in terms of memory and CPU usage, even when compared to threads in other programming languages. Therefore, it is not uncommon to run tens or even [hundreds of thousands](https://phoenixframework.org/blog/the-road-to-2-million-websocket-connections) of processes simultaneously.
+
+## Internals of a process
+
+Let's explore the structure of an Elixir process at a high level.
+
+An Elixir process consists of four primary memory blocks: the stack, the heap, the message area (also known as the mailbox), and the Process Control Block (PCB). The stack is responsible for tracking program execution by storing return addresses, passing function arguments, and keeping local variables. The heap, on the other hand, stores larger structures such as lists and tuples.
+
+The message area or mailbox is used to hold messages sent from other processes to the target process. The PCB maintains the state of the process, while the stack, heap, and mailbox are dynamically allocated and can grow or shrink based on usage. Conversely, the PCB is statically allocated and contains several fields that control the process.
+
+Message passing is the primary means of communication between Elixir processes. When one process sends a message to another, the message is copied from the sender's heap to the recipient's mailbox. In certain circumstances, such as when a process is suspended and no other processes are attempting to send it messages, the message may be directly copied to the recipient's mailbox. In other cases, the message is stored in an m-buf and moved to the heap after a garbage collection. M-bufs are variable-length heap fragments, and a process may have several m-bufs.
+
+It is worth noting that in the early versions of Erlang, parallelism was not available, so only one process could execute at any given time. In such versions, the sending process could write directly to the heap of the receiving process. However, with the rise of multicore systems, message copying across process heaps is managed using locks and queues. To learn more about this topic, please see this [article](https://blog.stenmans.org/theBeamBook/#_the_process_of_sending_a_message_to_a_process).
+
+## Resources
+
+* https://elixir-lang.org/getting-started/processes.html
+* https://hexdocs.pm/elixir/1.12/Process.html
+* https://www.erlang-solutions.com/blog/understanding-processes-for-elixir-developers/

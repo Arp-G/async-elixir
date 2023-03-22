@@ -1,0 +1,156 @@
+# Process Linking & Trapping Exists
+
+## Process Linking
+
+In Elixir, when we create a process, we have the option to link it to its parent process. This means that if the child process encounters an error and fails, the parent process will be notified.
+
+When we use the spawn/1 function to create a process, it will not be linked to its parent process. As a result, if the child process encounters an error and fails, the parent process will not be notified.
+
+To ensure that the parent process is notified of any errors in the child process, we can use the spawn_link/1 function instead. This function creates a linked process, so if the child process crashes, the parent process will receive an EXIT signal.
+
+To illustrate this, let's consider an example...
+
+```elixir
+unlinked_child_process = spawn(fn -> raise("BOOM! Unliked process crashed!") end)
+
+IO.inspect(Process.info(self(), :links))
+
+:timer.sleep(100)
+
+IO.puts("Parent process still alive!")
+```
+
+In the above example we can see that the parent process is still alive after the spawned process crashes. Lets see what happens if the processes were linked
+
+```elixir
+# linked_child_process = spawn_link(fn -> raise("BOOM! Linked process crashed!") end)
+
+# IO.inspect Process.info(self(), :links)
+
+# :timer.sleep(100)
+
+# IO.puts "Parent process still alive!"
+```
+
+This time the print statement "Parent process still alive!" is never printed because when linked process crashes it brings down the parent process with it.
+
+When a linked process exits gracefully with a reason :normal this does not lead to the parent process to crash. Any other reason other than :normal is considered an abnormal termination and will lead to the linked processes exiting as well.
+
+```elixir
+linked_process = spawn_link(fn -> :timer.sleep(60000) end)
+Process.exit(linked_process, :normal)
+:timer.sleep(100)
+IO.puts(Process.alive?(linked_process))
+```
+
+Linking can also be done manually by calling `Process.link/1`, lets see a bigger example...
+
+```elixir
+defmodule LinkingProcess do
+  def call do
+    child_process = spawn(&recursive_link_inspectior/0)
+
+    IO.inspect(self(), label: "Parent process PID")
+    IO.inspect(child_process, label: "Child process PID")
+
+    IO.inspect(Process.info(self(), :links), label: "Parent process links")
+
+    send(child_process, :inspect_links)
+
+    # Wait for the child process to print its links
+    :timer.sleep(100)
+
+    # Link the two processes
+    Process.link(child_process)
+
+    IO.inspect(Process.info(self(), :links), label: "Parent process links")
+
+    send(child_process, :inspect_links)
+  end
+
+  defp recursive_link_inspectior do
+    receive do
+      :inspect_links ->
+        links = Process.info(self(), :links)
+        IO.inspect(links, label: "Child process links")
+    end
+
+    recursive_link_inspectior()
+  end
+end
+
+LinkingProcess.call()
+```
+
+When a process is linked to others, a crash in that process can trigger a cascade effect, potentially causing multiple other linked processes to crash as well. For instance, imagine a scenario where five processes (P1 to P5) are linked as follows:
+
+`P1 <-> P2 <-> P3 <-> P4 <-> P5`
+
+If any of these processes crash, it will cause all five to fail due to their interconnectivity. For instance, if P4 crashes, it will cause P3 and P5 to crash as well. This, in turn, will lead to the failure of P2, which will ultimately cause P1 to fail as well.
+
+It's important to remember that **process links are bidirectional**, which means that if one process fails, it will affect the other processes as well.
+
+<!-- livebook:{"break_markdown":true} -->
+
+### Importance of process linking
+
+Processes and links play an important role when building fault-tolerant systems. Elixir processes are isolated and don’t share anything by default. Therefore, a failure in a process will never crash or corrupt the state of another process. Links, however, allow processes to establish a relationship in case of failure. We often link our processes to supervisors which will detect when a process dies and start a new process in its place.
+
+While other languages would require us to catch/handle exceptions, in Elixir we are actually fine with letting processes fail because we expect supervisors to properly restart our systems. “Failing fast” (sometimes referred as “let it crash”) is a common philosophy when writing Elixir software!
+
+<!-- livebook:{"break_markdown":true} -->
+
+### Trapping EXITS
+
+For some reason if we want to prevent a process from crashing when a linked process exits we can do so by trapping exit message.
+
+Normally when a process finishes its work it implicitly calls exit(:normal) to communicate with its parent that job has been done. Every other argument to exit/1 than :normal is treated as an error.
+
+Setting `trap_exit` to true in Elixir means that exit signals received by a process are converted into messages of the form `{'EXIT', From, Reason}`. These messages can then be received like any other message in the process's mailbox. On the other hand, if `trap_exit` is set to false, the process will exit if it receives an exit signal that is not a normal exit, and the signal will be passed on to any processes that are linked to it.
+
+By using `trap_exit` and linking processes, we can prevent the failure of one process from causing the failure of another. This allows the linked process to handle the termination of the other process gracefully, rather than being abruptly terminated itself.
+
+As always lets look at an example to understand this better...
+
+```elixir
+Process.flag(:trap_exit, true)
+
+p = spawn_link(fn -> exit(:boom) end)
+
+:timer.sleep(100)
+
+IO.puts(Process.alive?(p))
+
+Process.info(self_pid, :messages) |> IO.inspect(label: "Messages in mailbox")
+```
+
+As we see from the print messages the linked process crashing does not lead to a crash of the parent process as it is trapping exits, instead the parent receives a message like `{:EXIT, linked_process_pid, :boom}` in its mailbox.
+
+<!-- livebook:{"break_markdown":true} -->
+
+It is generally recommended to avoid trapping exits as it can modify the normal behavior of processes. Instead, it is recommended to utilize monitors and supervisors to handle failures.
+
+When a process traps exits, it becomes unresponsive to exit signals unless a kill exit reason is explicitly sent to it. Lets look at an example...
+
+```elixir
+p =
+  spawn(fn ->
+    Process.flag(:trap_exit, true)
+    :timer.sleep(:infinity)
+  end)
+
+IO.inspect(Process.alive?(p), label: "Process alive initially")
+
+Process.exit(p, :normal)
+IO.inspect(Process.alive?(p), label: "After :normal exit signal")
+
+Process.exit(p, :boom)
+IO.inspect(Process.alive?(p), label: "After :boom exit signal")
+
+Process.exit(p, :kill)
+IO.inspect(Process.alive?(p), label: "After :kill exit signal")
+```
+
+## Resources
+
+* https://eddwardo.github.io/posts/links-in-elixir/

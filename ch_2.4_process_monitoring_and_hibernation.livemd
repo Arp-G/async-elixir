@@ -1,0 +1,67 @@
+# Process Monitoring and Hibernation
+
+## Process Monitors
+
+Process links are bidirectional, which means that if a linked process exits, it will also bring down the current process. However, if we only want the current process to be notified when a process has exited, instead of linking, we can use monitors.
+
+Unlike linking, monitoring is unidirectional. If there is an error in a monitored process, it does not bring down the current process. Instead, the current process is notified via a `{:DOWN, <reference>, :process, <pid>, <exit_reason>}` message.
+
+It's worth noting that even when the monitored process exits normally, we still receive a message. In the case of process linking, a process is only notified if the linked process exits abnormally (i.e., with a reason other than :normal).
+
+Lets look at an example of process monitoring...
+
+```elixir
+pid = spawn(fn -> :timer.sleep(10000) end)
+Process.monitor(pid)
+Process.exit(pid, :boom)
+:timer.sleep(100)
+IO.inspect(Process.info(self(), :messages))
+```
+
+## Process hibernation
+
+We can call `Process.hibernate/3` to hibernate a process.
+
+From the official [documentation](https://erlang.org/doc/man/erlang.html#hibernate-3)
+
+> Puts the calling process into a **wait state** where its **memory allocation has been reduced as much as possible**. This is useful if the process does not expect to receive any messages soon. The process is awaken when a message is sent to it, and control resumes in Module:Function with the arguments specified by Args with the call stack emptied.
+
+> In more technical terms, `erlang:hibernate/3` discards the call stack for the process, and then **garbage collects** the process. After this, all live data is in one continuous heap. The heap is then shrunken to the exact same size as the live data that it holds.
+
+<!-- livebook:{"break_markdown":true} -->
+
+### When is process hiberantion usefull?
+
+Hibernation of a process can be beneficial in situations where the process should not be terminated but is not expected to receive any messages anytime soon. By hibernating the process, we can free up the memory that was allocated to the process during garbage collection and thus prevent unnecessary resource usage.
+
+Some practical examples where hibernation can be useful include occasionally used processes that should not be dropped, as doing so may be interpreted as a network disconnection by the client. Additionally, any process that is expensive to reinitialize may also be a good candidate for hibernation.
+
+Lets see an example...
+
+```elixir
+p1 =
+  spawn(fn ->
+    _big_binary = :crypto.strong_rand_bytes(1000)
+    :timer.sleep(:infinity)
+  end)
+
+p2 =
+  spawn(fn ->
+    _big_binary = :crypto.strong_rand_bytes(1000)
+    Process.hibernate(IO, :puts, ["P2 woken from hibernation"])
+
+    # This never executes as execution resumes at the function passed to Process.hibernate/3
+    :timer.sleep(:infinity)
+  end)
+
+Process.info(p1, :total_heap_size) |> IO.inspect(label: "Heap size of P1")
+Process.info(p2, :total_heap_size) |> IO.inspect(label: "Heap size of P2")
+
+# Wake p2 from hibernation by sending it a message
+send(p2, :msg)
+Process.alive?(p2) |> IO.inspect(label: "P2 alive")
+```
+
+## Resources
+
+* https://elixirforum.com/t/when-is-hibernation-of-processes-useful/23181/5

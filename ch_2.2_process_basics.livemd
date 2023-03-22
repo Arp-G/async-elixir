@@ -1,0 +1,135 @@
+# Process Basics
+
+## Process introspection
+
+To check processes we have in a running system: `:shell_default.i`.
+
+You might notice that many processes have a heap size of 233, that is because it is the default starting heap size of a process.
+
+If there is a large number for the heap size, then the process uses a lot of memory and if there is a large number for the reductions then the process has executed a lot of code.
+
+Get lot more infor about a process using `Process.info/1`.
+
+```elixir
+Process.whereis(:code_server)
+pid = Process.whereis(:code_server)
+Process.info(pid)
+```
+
+[Process.info/2](http://Process.info/2) can be used to view additional info like backtrace `Process.info(pid, :backtrace)`
+
+The observer is also a great tool to observe processes, we will look into it in greater details later.
+
+## Process Dictionary
+
+There is actually one more memory area in a process where Erlang terms can be stored, the *Process Dictionary*.
+
+The *Process Dictionary* (PD) is a process local key-value store. One advantage with this is that all keys and values are stored on the heap and there is no copying as with send or an ETS table.
+
+([ETS](https://elixirschool.com/en/lessons/storage/ets#overview-0) or Erlang Term Storage is a in-memory store for Elixir and Erlang objects that comes included. ETS is capable of storing large amounts of data and offers constant time data access. Tables in ETS are created and owned by individual processes. When an owner process terminates, its tables are destroyed)
+
+```elixir
+# Stores the given key-value pair in the process dictionary.
+Process.put(:count, 1)
+Process.put(:locale, "en")
+```
+
+```elixir
+# Returns the value for the given key in the process dictionary
+Process.get(:count)
+```
+
+```elixir
+# Returns all keys in the process dictionary
+Process.get_keys()
+```
+
+```elixir
+# Deletes the given key from the process dictionary
+Process.delete(:count)
+```
+
+```elixir
+# Returns all key-value pairs in the process dictionary.
+Process.get()
+```
+
+## Spawning processes
+
+The most fundamental way to create processes in Elixir is by using the [spawn/1](https://hexdocs.pm/elixir/1.12/Kernel.html#spawn/1), [receive/1](https://hexdocs.pm/elixir/1.12/Kernel.SpecialForms.html#receive/1), and [send/2](https://hexdocs.pm/elixir/1.12/Kernel.html#send/2) functions. They enable us to spawn a process, wait for messages, and send messages to a process, respectively.
+
+Many higher-level abstractions, such as Task, GenServer, and Agent, are built on top of these primitive functions.
+
+These functions are part of the [Kernel](https://hexdocs.pm/elixir/1.12/Kernel.html) module and are automatically imported, allowing us to call them directly without needing to use the Kernel. prefix.
+
+Let's take a look at some examples of their usage...
+
+```elixir
+# Spawn a process, by passing it a function to execute.
+# spawn/1 returns the pid (process identifier) of the spawed process
+pid = spawn(fn -> IO.puts("Hello world") end)
+
+# Once the process has finished excuting it will exit
+Process.alive?(pid) |> IO.inspect()
+
+# Sleep for 100ms to wait for process to exit
+:timer.sleep(100)
+
+Process.alive?(pid)
+```
+
+## Exchanging messages between processes
+
+To exchange messages between processes in Elixir, you can use the send/2 and receive/1 functions.
+
+When a process uses send/2 to send a message, it doesn't block - instead, the message is placed in the recipient's mailbox, and the sending process continues.
+
+On the other hand, when a process uses receive/1, it blocks until a matching message is found in its mailbox. The receive/1 function searches the mailbox for a message that matches any of the given patterns.
+
+receive/1 supports guards and multiple clauses, such as case/2.
+
+Let's look at an example of a process sending a message to itself.
+
+```elixir
+# Get the pid of the current process
+self_pid = self()
+
+# Send a message to the current process
+send(self_pid, :ping)
+
+# Check messages in mailbox without consuming them
+Process.info(self_pid, :messages) |> IO.inspect(label: "Messages in mailbox")
+
+# Recieve the message waiting in mailbox
+receive do
+  :ping -> IO.puts(:pong)
+end
+
+# Check messages in mailbox again
+Process.info(self_pid, :messages) |> IO.inspect(label: "Messages in mailbox")
+```
+
+An optional after clause can be given in case the message was not received after the given timeout period, specified in milliseconds.
+(If timeout `0` is given then the message is expected to be already present in the mailbox.)
+
+```elixir
+receive do
+  {:message, message} when message in [:start, :stop] -> IO.puts(message)
+  _ -> IO.puts(:stderr, "Unexpected message received")
+after
+  1000 -> IO.puts(:stderr, "Timeout, no message in 1 seconds")
+end
+```
+
+In the elixir IEx shell, we have a helper function flush/0 that flushes or consumes and prints all the messages in the mailbox of the shell process.
+
+```elixir
+send(self(), :hello)
+
+Process.info(self_pid, :messages) |> IO.inspect(label: "Messages in mailbox before flush")
+
+# In the iex shell we wont have to use the `IEx.Helpers,` prefix since these helpers functions are imported automatically
+IEx.Helpers.flush()
+
+Process.info(self_pid, :messages) |> IO.inspect(label: "Messages in mailbox after flush")
+```
