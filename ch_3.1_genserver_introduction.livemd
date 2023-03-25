@@ -1,0 +1,133 @@
+# Genserver Introduction
+
+## What is a Genserver?
+
+In OTP, we have several behaviors that formalize common patterns in programming. Behaviors can be thought of as design patterns for processes. Over time, programmers have identified common patterns of using processes in OTP and designed standardized interfaces to cater to such use cases.
+
+One such behavior is the GenServer, which comes bundled with OTP. Other examples of behaviors include Supervisors and Applications.
+
+At its most basic level, **a GenServer is a single process that runs a loop and handles one message per iteration, passing along an updated state**. By using the GenServer behavior and implementing the necessary callbacks, we can easily implement a client-server relation.
+
+## Genserver callbacks
+
+In order to create a genserver we must first use the genserver behaviour by adding the following line to our module `use Genserver`
+
+After this we can implement the Genserver callbacks, a genserver has the following callbacks..
+
+* `init/1`
+* `handle_continue/2`
+* `handle_call/3`
+* `handle_cast/2`
+* `handle_info/2`
+* `terminate/2`
+* `format_status/2`
+* code_change/3
+
+These callbacks are called at various points in the lifecycle of a genserver. Lets build a simple `counter` to go through these callbacks one by one...
+
+```elixir
+defmodule Counter do
+  use GenServer
+
+  @impl true
+  def init(state) do
+    IO.inspect("init called, initial counter state: #{state}")
+    {:ok, state}
+  end
+
+  @impl true
+  def handle_cast({:inc, value}, state) do
+    {:noreply, state + value}
+  end
+
+  @impl true
+  def handle_cast({:dec, value}, state) do
+    {:noreply, state - value}
+  end
+
+  @impl true
+  def handle_call(:get_count, _from, state) do
+    {:reply, "The count is #{state}", state}
+  end
+
+  @impl true
+  def handle_info(message, state) do
+    IO.inspect("Handle info called with message #{inspect(message)}")
+    {:noreply, state}
+  end
+
+  @impl true
+  def terminate(reason, _state) do
+    IO.inspect("Genserver Terminating with reason #{reason}...")
+  end
+end
+```
+
+With the above counter genserver code let us try to understand the different callbacks.
+We will enable tracing genserver messages via the [:sys.trace/2](https://www.erlang.org/doc/man/sys.html#trace-2) function from the erlang `sys` module.
+
+```elixir
+IO.inspect("Starting Genserver")
+{:ok, pid} = GenServer.start(Counter, 0)
+IO.inspect("Genserver Started")
+
+# Start tracing the genserver processes
+:sys.trace(pid, true)
+
+# Increment counter by 10
+:ok = GenServer.cast(pid, {:inc, 10})
+# Decrement counter by 5
+:ok = GenServer.cast(pid, {:dec, 5})
+# Increment counter by 5
+:ok = GenServer.cast(pid, {:inc, 2})
+current_count = GenServer.call(pid, :get_count)
+IO.puts("Current count = #{current_count}")
+
+# Send a message to the genserver process
+send(pid, "Hi genserver!")
+
+# Stop the genserver
+GenServer.stop(pid, :boom)
+```
+
+Let's analyze the lifecycle of the GenServer by examining the output of the above code. Firstly notice that all of the functions are marked with `@impl true` to signify that they are implementing the GenServer behavior.
+
+Each GenServer callback receives the current state of the process and has the opportunity to update it. The callbacks can also return various values like `:noreply`, `:reply`, `:continue`, `:stop`, `:hibernate`, etc. These values govern the GenServer's lifecycle.
+
+#### Starting the GenServer - init/2
+
+To start the GenServer, we call `GenServer.start(Counter, 0)` which starts the GenServer process as an **unlinked process** we can use `GenServer.start_link/3` to start it as a linked process. We pass it the GenServer module name and the initial state of our Counter GenServer process. The output indicates that the `GenServer.start/2` call is **synchronous** and waits until the `init/2` GenServer callback. Once started, the GenServer process pid is returned.
+
+#### handle_cast/2
+
+We then send different cast messages like :inc and :dec to the GenServer to modify the process state, which, in our case, increments or decrements the counter. The `handle_cast/2` GenServer callback handles these cast calls. It's important to remember that cast messages are asynchronous and the `GenServer.cast/2` call does not wait for the cast message to be processed. Also, using cast, the GenServer **cannot send a reply** back to the caller process, so we only receive a `:ok` as the return value when calling `GenServer.cast/2`.
+
+#### handle_call/3
+
+We then use `GenServer.call/3` to fetch the current count, which is handled by the `handle_call/3` GenServer callback. Unlike `GenServer.cast/2`, this is a **synchronous operation**, meaning the `GenServer.call/3` function call must wait until the GenServer finishes processing the message. It also **allows the GenServer to return a reply to the caller**. In our case, the Counter GenServer returns the current count as a string like "The count is #{state}". It's worth noting that the `handle_call/3` receives a from parameter, which contains the pid of the caller process.
+
+### handle_info/2
+
+Next, we send a message to the GenServer process using the `send/2` function. It's important to remember that a GenServer can also receive messages like any other elixir process. The `handle_info/2` GenServer callback handles such messages that are not calls or casts. In our case, we simply log the message "Hi genserver!".
+
+#### terminate/2
+
+Finally, we stop the GenServer process by calling `GenServer.stop/2`, which invokes the `terminate/2` GenServer callback, and the GenServer process is stopped.
+
+<!-- livebook:{"break_markdown":true} -->
+
+You might be wondering when the other GenServer callbacks are invoked, lets gor through them one by one....
+
+#### handle_continue/2
+
+Most GenServer callbacks have the option to return a value containing a continue instruction like `{:continue, continue_arg}`. When such a value is returned, the `handle_continue/2` callback is invoked to handle the continue instruction. This is useful for splitting the work in a callback into multiple steps and updating the process state along the way, or for performing work after initialization.
+
+For example, to initialize a GenServer, we may need to perform a time-consuming task within the init/2 callback, which would block the caller and prevent the GenServer from starting. To avoid this, we can return a value like `{:ok, state, {:continue, continue_arg}}`, which allows the GenServer to start and unblocks the caller. The handle_continue/2 callback is then immediately invoked, where we can set the GenServer state.
+
+#### format_status/2
+
+This callback is infrequently used, but it can be helpful when inspecting a GenServer state with functions like `:sys.get_state/1`. It defines a formatted version of the status.
+
+#### code_change/3
+
+This callback is also rarely used. It handles changes to the GenServer's state when a new version of a module is loaded ([hot code swapping](https://medium.com/blackode/how-to-perform-hot-code-swapping-in-elixir-afc824860012)) and the term structure of the state needs to be updated.
