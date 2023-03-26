@@ -21,7 +21,7 @@ After this we can implement the Genserver callbacks, a genserver has the followi
 * `handle_info/2`
 * `terminate/2`
 * `format_status/2`
-* code_change/3
+* `code_change/3`
 
 These callbacks are called at various points in the lifecycle of a genserver. Lets build a simple `counter` to go through these callbacks one by one...
 
@@ -116,7 +116,7 @@ Finally, we stop the GenServer process by calling `GenServer.stop/2`, which invo
 
 <!-- livebook:{"break_markdown":true} -->
 
-You might be wondering when the other GenServer callbacks are invoked, lets gor through them one by one....
+You might be wondering when the other GenServer callbacks are invoked, lets go through them one by one....
 
 #### handle_continue/2
 
@@ -131,3 +131,36 @@ This callback is infrequently used, but it can be helpful when inspecting a GenS
 #### code_change/3
 
 This callback is also rarely used. It handles changes to the GenServer's state when a new version of a module is loaded ([hot code swapping](https://medium.com/blackode/how-to-perform-hot-code-swapping-in-elixir-afc824860012)) and the term structure of the state needs to be updated.
+
+## The terminate callback
+
+The `terminate/2` callback is triggered when a GenServer is about to exit, allowing for any necessary cleanup operations. However, it is important to note that `terminate/2` is not always guaranteed to be called.
+
+`terminate/2` is only called when the GenServer is trapping exits using the `Process.flag(:trap_exit, true)` OR if in a callback we return a `:stop` tuple or `raise` and exception. We will later study about process supervisors which can stop a genserver using a `:brutal_kill` strategy which alos does not result in a call to `terminate/2`.
+
+Therefore it is *not guaranteed* that `terminate/2` is called when a GenServer exits and we should not rely on it and place critical logic in this callback.
+
+For further information, see the discussion [here](https://stackoverflow.com/a/39775617).
+
+## Lifecycle of a GenServer
+
+A simplified overview of the lifecycle of a GenServer is given below
+
+<!-- livebook:{"break_markdown":true} -->
+
+![](images/genserver_lifecycle.svg)
+
+<!-- livebook:{"break_markdown":true} -->
+
+Now that we have got an overview of the workings of a GenServer lets look at some gotachas and key points related to GenServers...
+
+## GenServer Key Points to Remeber
+
+* A GenServer is a **single elixir process** that operates in a loop, processing messages from its mailbox in the **order** they are received.
+* If a message takes a long time to process, calling synchronous functions such as `GenServer.call/2` may result in timeouts. You can specify a longer timeout (the default is 5 seconds) or use multiple GenServers to avoid overloading a single process.
+* GenServer functions fall into two categories: synchronous functions, like `GenServer.call/3`, which wait for a response, and asynchronous functions, like `GenServer.cast/2`, which do not wait for a reply.
+* Implementing GenServer callbacks is optional, as Elixir provides default implementations. For example, if you don't define `handle_cast/2`, Elixir will use [a default implementation](https://github.com/elixir-lang/elixir/blob/a64d42f5d3cb6c32752af9d3312897e8cd5bb7ec/lib/elixir/lib/gen_server.ex#L809) that raises an error when the GenServer receives a cast message.
+  GenServer callbacks can return different values to control the process's lifecycle. For instance:
+  * Returning `{:continue, term()}` tells the GenServer to continue processing the message, triggering the `handle_continue/2` callback.
+  * Returning `{:stop, reason, new_state}` terminates the GenServer process.
+  * Returning `:hibernate` puts the GenServer process to sleep, freeing up resources.
