@@ -1,0 +1,231 @@
+# GenServer examples
+
+## Password Manager
+
+Our objective is to create a straightforward password manager GenServer that can save user's passwords in its state.
+
+Notice how we have developed an API with functions like `save_password/3`, `get_password/1`, and `delete_password/1`. This API facilitates easy communication with the GenServer without needing to directly call GenServer functions like `GenServer.call/3` or `GenServer.cast/2`.
+
+Also notice how we have ensured that the GenServer code is kept to a minimum and have placed our password validation logic in a separate module. This approach of separating the logic into a purely functional module makes testing easier since the buissness logic can be tested in isolation without dealing with the GenServer.
+
+```elixir
+defmodule Password do
+  defstruct url: nil, username: nil, password: nil, inserted_at: nil
+
+  @doc """
+  Check if a password entry is valid
+  """
+  def validate_entry(%Password{url: url, username: username, password: password}) do
+    with {:ok, _url} <- URI.new(url),
+         {:ok, _username} <- validate_username(username),
+         {:ok, _password} <- validate_password(password) do
+      {:ok,
+       %Password{
+         url: url,
+         username: username,
+         password: password,
+         inserted_at: DateTime.utc_now()
+       }}
+    end
+  end
+
+  # Helper functions
+  defp validate_username(username) do
+    cond do
+      not is_binary(username) -> {:error, "Invalid username"}
+      String.length(username) == 0 -> {:error, "Username is empty"}
+      true -> {:ok, username}
+    end
+  end
+
+  defp validate_password(password) do
+    cond do
+      not is_binary(password) -> {:error, "Invalid password"}
+      String.length(password) < 3 -> {:error, "Password must be atleast 3 character long"}
+      true -> {:ok, password}
+    end
+  end
+end
+
+defmodule PasswordManager do
+  use GenServer
+
+  # Public APIs
+
+  def start_link(_opts) do
+    GenServer.start_link(
+      __MODULE__,
+      %{},
+      # Use the module name as the name of the GenServer Process
+      name: __MODULE__
+    )
+  end
+
+  def save_password(url, username, password) do
+    entry = %Password{
+      url: url,
+      username: username,
+      password: password
+    }
+
+    GenServer.call(__MODULE__, {:save_password, entry})
+  end
+
+  def get_password(url) do
+    GenServer.call(__MODULE__, {:get_password, url})
+  end
+
+  def delete_password(url) do
+    GenServer.cast(__MODULE__, {:delete_password, url})
+  end
+
+  def stop(), do: GenServer.stop(__MODULE__)
+
+  # Callbacks
+
+  @impl true
+  def init(state) do
+    {:ok, state}
+  end
+
+  @impl true
+  def handle_call({:save_password, new_password}, _from, state) do
+    case Password.validate_entry(new_password) do
+      {:ok, entry} -> {:reply, :saved, Map.put(state, entry.url, entry)}
+      {:error, reason} -> {:reply, {:error, reason}, state}
+    end
+  end
+
+  @impl true
+  def handle_call({:get_password, url}, _from, state) do
+    case Map.get(state, url) do
+      nil -> {:reply, :not_found, state}
+      entry -> {:reply, entry, state}
+    end
+  end
+
+  @impl true
+  def handle_cast({:delete_password, url}, state) do
+    state = Map.delete(state, url)
+    {:noreply, state}
+  end
+end
+```
+
+```elixir
+# Start the Password Manager Genserver
+{:ok, _pid} = PasswordManager.start_link(nil)
+
+PasswordManager.save_password("gmail.com", "john_doe@gmail.com", "12345")
+|> IO.inspect(label: "Saving Gmail creds")
+
+PasswordManager.save_password("spotify.com", "music4life", "ab")
+|> IO.inspect(label: "Saving Spotify creds")
+
+PasswordManager.save_password("apple.com", "iuser", "ilife")
+|> IO.inspect(label: "Saving Apple creds")
+
+PasswordManager.get_password("gmail.com") |> IO.inspect(label: "Gmail creds")
+PasswordManager.get_password("spotify.com") |> IO.inspect(label: "Spotify creds")
+
+PasswordManager.delete_password("gmail.com") |> IO.inspect(label: "Deleting Gmail")
+PasswordManager.get_password("gmail.com") |> IO.inspect(label: "Gmail creds")
+
+PasswordManager.stop()
+```
+
+### Testing GenServer
+
+<!-- livebook:{"break_markdown":true} -->
+
+Now lets try to write some tests for the above GenServer.
+
+```elixir
+ExUnit.start()
+
+defmodule PasswordManagerTest do
+  use ExUnit.Case
+
+  describe "save_password/3" do
+    test "saves password if password entry is valid" do
+      {:ok, _pid} = PasswordManager.start_link(nil)
+      assert :saved == PasswordManager.save_password("gmail.com", "john_doe@gmail.com", "12345")
+
+      assert %Password{
+               url: "gmail.com",
+               username: "john_doe@gmail.com",
+               password: "12345",
+               inserted_at: _
+             } = PasswordManager.get_password("gmail.com")
+    end
+
+    test "does not save password if password entry is invalid" do
+      {:ok, _pid} = PasswordManager.start_link(nil)
+
+      assert {:error, "Password must be atleast 3 character long"} ==
+               PasswordManager.save_password("gmail.com", "john_doe@gmail.com", "12")
+
+      assert :not_found == PasswordManager.get_password("gmail.com")
+    end
+  end
+
+  describe "delete_password/3" do
+    test "deletes password if password found" do
+      {:ok, _pid} = PasswordManager.start_link(nil)
+      assert :saved == PasswordManager.save_password("gmail.com", "john_doe@gmail.com", "12345")
+      assert :ok == PasswordManager.delete_password("gmail.com")
+
+      assert :not_found = PasswordManager.get_password("gmail.com")
+    end
+  end
+end
+
+ExUnit.run()
+```
+
+Here the password validation logic can be tested independently, without having to start the GenServer in the tests. This method of testing is preferable since testing pure functions is generally much easier than testing async GenServer code.
+
+## Cron Job
+
+Lets see another example of building a GenServer. In Elixir, you can easily create a basic CRON job using GenServers to execute a task periodically.
+
+```elixir
+defmodule CronJob do
+  use GenServer
+
+  # Every 10 seconds
+  @interval :timer.seconds(10)
+
+  def start_link(_opts) do
+    GenServer.start_link(__MODULE__, %{})
+  end
+
+  def init(state) do
+    schedule_work()
+    {:ok, state}
+  end
+
+  def handle_info(:work, state) do
+    work()
+    schedule_work()
+    {:noreply, state}
+  end
+
+  defp schedule_work() do
+    Process.send_after(self(), :work, @interval)
+  end
+
+  defp work() do
+    IO.inspect("Working...")
+  end
+end
+
+CronJob.start_link(nil)
+```
+
+This works fine for simple use cases however, if you require more advanced functionality consider using a library such as [Quantum](https://github.com/quantum-elixir/quantum-core).
+
+## Resources
+
+* https://hexdocs.pm/elixir/1.14.4/GenServer.html#reply/2
+* https://medium.com/blackode/2-unique-use-cases-of-genserver-reply-deep-insights-elixir-expert-31e7abbd42d1

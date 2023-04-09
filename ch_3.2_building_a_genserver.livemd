@@ -1,0 +1,108 @@
+# Buliding a GenServer
+
+## Building a GenServer from scratch
+
+```elixir
+defmodule MyGenServer do
+  # Callbacks to implement
+  @callback init(term()) :: {:ok, term()}
+  @callback handle_call(term(), pid(), term()) :: {:reply, term(), term()}
+  @callback handle_cast(term(), term()) :: {:noreply, term()}
+  @callback handle_info(term(), term()) :: {:noreply, term()}
+
+  # == Public API ==
+  def start_link(module, args) do
+    {:ok, spawn_link(__MODULE__, :server_init, [module, args])}
+  end
+
+  def call(server_pid, args) do
+    send(server_pid, {:call, self(), args})
+
+    receive do
+      {:response, response} -> response
+    end
+  end
+
+  def cast(server_pid, args) do
+    send(server_pid, {:cast, args})
+  end
+
+  def stop(server_pid, reason \\ :normal) do
+    send(server_pid, {:stop, reason})
+  end
+
+  # == Internal implementation ==
+  def server_init(module, args) do
+    {:ok, state} = module.init(args)
+    genserver_loop(module, state)
+  end
+
+  # Recursively loop and wait for messages
+  def genserver_loop(module, state) do
+    receive do
+      {:call, parent_pid, args} ->
+        {:reply, response, new_state} = module.handle_call(args, parent_pid, state)
+        send(parent_pid, {:response, response})
+        genserver_loop(module, new_state)
+
+      {:cast, args} ->
+        {:noreply, new_state} = module.handle_cast(args, state)
+        genserver_loop(module, new_state)
+
+      {:stop, reason} ->
+        module.terminate(reason, state)
+        exit(reason)
+
+      request ->
+        {:noreply, new_state} = module.handle_info(request, state)
+        genserver_loop(module, new_state)
+    end
+  end
+end
+```
+
+## Using our GenServer
+
+```elixir
+defmodule Stack do
+  @behaviour MyGenServer
+
+  @impl true
+  def init(args) do
+    {:ok, args}
+  end
+
+  @impl true
+  def handle_call(:get_stack, _from, state) do
+    {:reply, state, state}
+  end
+
+  @impl true
+  def handle_call(:pop, _from, [num | state]) do
+    {:reply, num, state}
+  end
+
+  @impl true
+  def handle_cast({:push, num}, state) do
+    IO.inspect(num, label: "PUSH")
+    {:noreply, [num | state]}
+  end
+
+  @impl true
+  def handle_info(:stats, state) do
+    IO.inspect("Stack length: #{length(state)}")
+    {:noreply, state}
+  end
+end
+```
+
+```elixir
+{:ok, stack_server_pid} = MyGenServer.start_link(Stack, [])
+MyGenServer.cast(stack_server_pid, {:push, 1})
+MyGenServer.cast(stack_server_pid, {:push, 2})
+MyGenServer.cast(stack_server_pid, {:push, 3})
+MyGenServer.call(stack_server_pid, :get_stack) |> IO.inspect(label: "STACK")
+MyGenServer.call(stack_server_pid, :pop) |> IO.inspect(label: "POP")
+MyGenServer.call(stack_server_pid, :get_stack) |> IO.inspect(label: "STACK")
+send(stack_server_pid, :stats)
+```

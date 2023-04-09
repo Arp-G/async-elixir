@@ -1,0 +1,125 @@
+# Other GenServer functions
+
+## GenServer.reply/2
+
+In the previous chapters, we learned that a GenServer is a single process that processes messages from its mailbox one at a time. When using `GenServer.call/3`, the calling process waits until the GenServer sends a reply.
+
+However, in some cases, a GenServer may receive a message that requires a time-consuming task, which can block the GenServer and prevent it from processing new messages while it handles the lengthy task.
+
+To avoid this issue, we can delegate the time-consuming task to a separate process, which allows the GenServer to continue handling new messages without being blocked. Once the time-consuming task is completed, the GenServer can reply back to the caller using `GenServer.reply/2`.
+
+To put it simply, `GenServer.reply/2` can be used to send a reply back to a client that has called `GenServer.call/3`. This is especially useful when the reply cannot be specified in the return value of handle_call/3
+
+---
+
+To illustrate this concept, let's walk through an example.
+
+We will build a *FoodOrderingServer* which allows users to order for a food item or list past orders. Lets suppose the call to list the past order is a fast one however the call to place an order is a slow operation.
+
+Ideally we don't want to block other calls to the GenServer while its bussy placing an order.
+
+```elixir
+defmodule FoodOrderingServer do
+  use GenServer
+
+  # Public APIs
+
+  def start_link(_opts) do
+    GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
+  end
+
+  def place_order(user, item) do
+    # We specify a timeout of 10 seconds to avoid timeout errors, 
+    # since placing an order takes a lot of time
+    GenServer.call(__MODULE__, {:place_order, user, item}, 10000)
+  end
+
+  def list_orders(user) do
+    GenServer.call(__MODULE__, {:list_orders, user})
+  end
+
+  # Callbacks
+
+  @impl true
+  def init(_args) do
+    {:ok, %{}}
+  end
+
+  @impl true
+  def handle_call({:place_order, user, item}, from, state) do
+    IO.puts("Recieved new order request from #{inspect(from)}")
+
+    spawn(fn ->
+      # Simulate placing order which takes 6 seconds
+      :timer.sleep(6000)
+      send(__MODULE__, {:order_placed, user, item, from})
+    end)
+
+    # Notice how we return :noreply here
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_call({:list_orders, user}, _from, state) do
+    {:reply, Map.get(state, user, []), state}
+  end
+
+  @impl true
+  def handle_info({:order_placed, user, item, from}, state) do
+    state =
+      Map.update(
+        state,
+        user,
+        [item],
+        fn existing_orders -> [item | existing_orders] end
+      )
+
+    IO.puts("Item #{item} ordered by #{user}")
+    # Send reply to the caller who is waiting for the order
+    GenServer.reply(from, {:ok, :order_placed})
+    {:noreply, state}
+  end
+end
+```
+
+```elixir
+GenServer.stop(FoodOrderingServer)
+{:ok, _pid} = FoodOrderingServer.start_link(nil)
+
+FoodOrderingServer.place_order("Jhon", "sandwich")
+FoodOrderingServer.place_order("Tom", "pizza")
+```
+
+```elixir
+# Ordering simultaneously from different processes
+
+spawn(fn -> FoodOrderingServer.place_order("Jhon", "burger") end)
+
+spawn(fn ->
+  FoodOrderingServer.place_order("Tom", "ice cream")
+
+  FoodOrderingServer.list_orders("Tom")
+  |> IO.inspect(label: "Toms orders")
+end)
+
+spawn(fn ->
+  FoodOrderingServer.list_orders("Tom")
+  |> IO.inspect(label: "Toms orders")
+end)
+```
+
+#### Code Breakdown
+
+In the given code, we initially place orders one by one and observe that each call to `FoodOrderingServer.place_order/2` waits for the GenServer's reply before proceeding.
+
+To simulate multiple users placing and listing their orders simultaneously, we spawn two processes and place orders from each of them concurrently. Since the GenServer delegates the order placing task to another process, it is not blocked and can immediately respond to both orders. Once the orders are processed, the processes send a message back to the GenServer via `send(__MODULE__, {:order_placed, user, item, from})` which is handled by the `handle_info/2` callback, after which the GenServer replies back to the callers who were awaiting the reply using `GenServer.reply(from, {:ok, :order_placed})`.
+
+This design unblocks the GenServer, allowing it to always respond to messages promptly.
+
+It's important to note that `GenServer.reply/`2 can be invoked from any process, not just from within the GenServer process. In our example, we could have called `GenServer.reply(from, {:ok, :order_placed})` from the spawned processes. This is possible because the from parameter holds the PID of the caller along with a reference that enables the caller to recognize that the message came as a reply for the `GenServer.call/2` that it was waiting for.
+
+---
+
+<!-- livebook:{"break_markdown":true} -->
+
+There are 2 other functions `GenServer.abcast/3` and `GenServer.multi_call/4` which allows us to cast and call multiple GenServers at a time and can be usefull in a distributed environment. We will explore these functions at later chapters.
