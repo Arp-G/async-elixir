@@ -1,0 +1,206 @@
+# Supervision strategies
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.9.0"}
+])
+```
+
+## Supervision strategies
+
+When starting a supervisor we can specify a supervision strategy. The supervision strategy dictates what happens when one of the children crashes.
+
+In the previous chapter we started the supervisor for our Stack GenServer process like `Supervisor.start_link(children, strategy: :one_for_one)`.
+
+Over hear the `:stategy` options passed to the supervisor refers to the supervision starategy.
+
+Lets go through each one of the supervision strategies in detail.
+
+To demonstrate this consider this simple GenServer which will crash if we send it a `:boom` message. The Genserver will stores a random positive integer in its state.
+
+```elixir
+defmodule CrashDummyServer do
+  use GenServer
+
+  def start_link(name) do
+    random_state = System.unique_integer([:positive])
+    GenServer.start_link(__MODULE__, {random_state, name}, name: name)
+  end
+
+  ## Callbacks
+
+  @impl true
+  def init({random_value, name}) do
+    IO.inspect("#{name} starting up!")
+    {:ok, random_value}
+  end
+
+  @impl true
+  def handle_cast(:boom, state) do
+    process_pid = self() |> inspect()
+    raise "BOOM! CrashDummyServer process: #{process_pid} crashed!"
+    {:noreply, state}
+  end
+end
+```
+
+In the examples so far, we started a supervisor by directly calling the `Supervisor.start_link/2` function with the required options. However we can also define the supervisor as a module instead.
+
+To do so we have to use the `Supervisor` otp behavior in our module.
+
+```elixir
+defmodule CrashDummySupervisor do
+  # Using this behaviour we will automatically define a child_spec/1 function
+  use Supervisor
+
+  def start_link(strategy) do
+    Supervisor.start_link(__MODULE__, strategy, name: __MODULE__)
+  end
+
+  # We have to implement this `init/1` callback when using the "Supervisor" behaviour
+  @impl true
+  def init(strategy) do
+    # Supervision tree
+    children = [
+      child_spec(:dummy1),
+      child_spec(:dummy2),
+      child_spec(:dummy3)
+    ]
+
+    # Notice the supervision strategy
+    Supervisor.init(children, strategy: strategy)
+  end
+
+  defp child_spec(name) do
+    Supervisor.child_spec({CrashDummyServer, name}, id: name)
+  end
+end
+```
+
+Here we are defining multiple instances of our "CrashDummyServer" GenServer in the supervision tree. When the supervisor is started it will automically strart three instances(processes) of the CrashDummyServer with names `:dummy1`, `:dummy2` and `:dummy3`.
+
+Since we are trying to start 3 processes of the same GenServer we cannot use the `{CrashDummyServer, name}` child spec since it will attempt to assign the module name as the `:id` and therefore the same `:id` will be given to all the 3 processes. To avoid notice how we are using the `Supervisor.child_spec/2` function and explcitely pass a separate id to each process.
+
+We are passing the supervision strategy as a argument to the `start_link/1` function and `init/1` callback so that we can restart the same supervisor with a different supervision strategy.
+
+## :one_for_one
+
+With this supervision strategy if a child process terminates, only that process is restarted.
+This means if there are multiple child processes supervised by our supervisor in case of a crash only the crashed process is restarted while the other supervised processes keep running.
+
+Lets start the supervisor and observe what happens when one of the supervised process crashes.
+
+<!-- livebook:{"break_markdown":true} -->
+
+We will use [Kino](https://hexdocs.pm/kino/) to draw the supervision tree before and after the crash.
+
+```elixir
+{:ok, supervisor_pid} = CrashDummySupervisor.start_link(:one_for_one)
+
+Supervisor.which_children(supervisor_pid) |> IO.inspect(label: "Supervisors Children")
+
+:sys.get_state(GenServer.whereis(:dummy1)) |> IO.inspect(label: "Dummy 1 state")
+:sys.get_state(GenServer.whereis(:dummy2)) |> IO.inspect(label: "Dummy 2 state")
+:sys.get_state(GenServer.whereis(:dummy3)) |> IO.inspect(label: "Dummy 3 state")
+
+Kino.Process.render_sup_tree(supervisor_pid)
+```
+
+```elixir
+# Makes the dummy2 child crash
+GenServer.cast(:dummy2, :boom)
+# Wait for the process to crash and be restarted
+Process.sleep(200)
+
+Supervisor.which_children(supervisor_pid) |> IO.inspect(label: "Supervisors Children")
+
+:sys.get_state(GenServer.whereis(:dummy1)) |> IO.inspect(label: "Dummy 1 state")
+:sys.get_state(GenServer.whereis(:dummy2)) |> IO.inspect(label: "Dummy 2 state")
+:sys.get_state(GenServer.whereis(:dummy3)) |> IO.inspect(label: "Dummy 3 state")
+
+Kino.Process.render_sup_tree(supervisor_pid)
+```
+
+From the above example we can verify that with `:one_for_one` supervision strategy only the `:dummy2` GenServer process crashed and was restarted so it got a different process pid and state, the two other process `:dummy1` and `:dummy3` continued to run so their prorcess pid and state remain unchanged.
+
+## :one_for_all
+
+With `:one_for_all` restart strategy if a child process terminates, all other child processes are terminated and then all child processes (including the terminated one) are restarted.
+
+Lets restart our `CrashDummySupervisor` with `:one_for_all` strategy.
+
+```elixir
+# Stop the existing supervisor process
+# We used the module name as the Supervisor process name so we can use the module name to stop
+# the supervisor process. 
+# This will also terminate the supervision tree and all process running under our supervisor
+Supervisor.stop(CrashDummySupervisor)
+
+{:ok, supervisor_pid} = CrashDummySupervisor.start_link(:one_for_all)
+
+Supervisor.which_children(supervisor_pid) |> IO.inspect(label: "Supervisors Children")
+
+:sys.get_state(GenServer.whereis(:dummy1)) |> IO.inspect(label: "Dummy 1 state")
+:sys.get_state(GenServer.whereis(:dummy2)) |> IO.inspect(label: "Dummy 2 state")
+:sys.get_state(GenServer.whereis(:dummy3)) |> IO.inspect(label: "Dummy 3 state")
+
+Kino.Process.render_sup_tree(supervisor_pid)
+```
+
+```elixir
+# Makes the dummy2 child crash
+GenServer.cast(:dummy2, :boom)
+# Wait for the process to crash and be restarted
+Process.sleep(200)
+
+Supervisor.which_children(supervisor_pid) |> IO.inspect(label: "Supervisors Children")
+
+:sys.get_state(GenServer.whereis(:dummy1)) |> IO.inspect(label: "Dummy 1 state")
+:sys.get_state(GenServer.whereis(:dummy2)) |> IO.inspect(label: "Dummy 2 state")
+:sys.get_state(GenServer.whereis(:dummy3)) |> IO.inspect(label: "Dummy 3 state")
+
+Kino.Process.render_sup_tree(supervisor_pid)
+```
+
+This time we can see that when the `:dummy_2` process crashed the supervisor restarted all the child processes. So the all processes now have a different pid.
+
+## :rest_for_one
+
+With the `:rest_for_one` strategy if a child process terminates, the terminated child process and the rest of the children which were started after it, are terminated and restarted.
+
+This is helpfull if you need to restart only a part of your supervision tree, such that when a process crashes only the process dependent on that crashed process are restarted.
+
+Therefore the order in which child process are specified in a supervision tree is very important. A supervisor will attempt to start the child process in the order in which they are specified in the supervisor child specification. Also in case of a crash a supervisor will restart the child process following this order.
+
+When a supervisor shuts down, it terminates all children in the opposite order they are listed.
+
+Lets check this out in action, with this strategy in our example when the `:dummy2` process crashes only the `:dummy2` and `:dummy3` process are restarted while `:dummy1` process continues to run.
+
+```elixir
+Supervisor.stop(CrashDummySupervisor)
+
+{:ok, supervisor_pid} = CrashDummySupervisor.start_link(:rest_for_one)
+
+Supervisor.which_children(supervisor_pid) |> IO.inspect(label: "Supervisors Children")
+
+:sys.get_state(GenServer.whereis(:dummy1)) |> IO.inspect(label: "Dummy 1 state")
+:sys.get_state(GenServer.whereis(:dummy2)) |> IO.inspect(label: "Dummy 2 state")
+:sys.get_state(GenServer.whereis(:dummy3)) |> IO.inspect(label: "Dummy 3 state")
+
+Kino.Process.render_sup_tree(supervisor_pid)
+```
+
+```elixir
+# Makes the dummy2 child crash
+GenServer.cast(:dummy2, :boom)
+# Wait for the process to crash and be restarted
+Process.sleep(200)
+
+Supervisor.which_children(supervisor_pid) |> IO.inspect(label: "Supervisors Children")
+
+:sys.get_state(GenServer.whereis(:dummy1)) |> IO.inspect(label: "Dummy 1 state")
+:sys.get_state(GenServer.whereis(:dummy2)) |> IO.inspect(label: "Dummy 2 state")
+:sys.get_state(GenServer.whereis(:dummy3)) |> IO.inspect(label: "Dummy 3 state")
+
+Kino.Process.render_sup_tree(supervisor_pid)
+```

@@ -1,0 +1,189 @@
+# Introduction to Supervisors
+
+## What is a Supervisor?
+
+In our previous lesson on OTP, we learned about the Genserver behavior. Another important behavior in OTP is the supervisor.
+
+Supervisors are responsible for supervising other processes, often called child processes. They play a crucial role in building a hierarchical process structure known as a **supervision tree**.This tree provides fault-tolerance and encapsulates the way our applications start and shutdown. Essentially, a supervisor process ensures that its child processes are running correctly and can handle any errors that may occur. Supervisors manage the whole life-cycle of any supervised processes, including startup and shutdown.
+
+Supervisors are the reason why an Elixir developer prefers to “let it crash” or “fail fast” since a crashed process can be automatically restarted by a supervisor,
+
+<!-- livebook:{"break_markdown":true} -->
+
+To better understand how supervisors work, let's examine a simple example. We'll create a Stack Genserver module with a bug that causes it to crash when attempting to pop an element from an empty stack. Since our Genserver is supervised, we can observe how the supervisor automatically restarts the failed Genserver process.
+
+```elixir
+defmodule Stack do
+  use GenServer
+
+  def start_link(%{initial_value: value, name: name}) do
+    GenServer.start_link(__MODULE__, value, name: name)
+  end
+
+  ## Callbacks
+
+  @impl true
+  def init(arg) do
+    {:ok, [arg]}
+  end
+
+  @impl true
+  def handle_call({:push, element}, _from, stack) do
+    {:reply, :pushed, [element | stack]}
+  end
+
+  @impl true
+  def handle_cast(:pop, [_popped | stack]) do
+    {:noreply, stack}
+  end
+end
+```
+
+```elixir
+children = [
+  %{
+    id: :stack_1,
+    # The Stack is a child porcess started via Stack.start_link/1
+    start: {Stack, :start_link, [%{initial_value: 0, name: :stack_1}]}
+  }
+]
+
+# Now we start the supervisor process and pass it the list of child specs
+# The supervisor automatically starts the child process and supervises them
+{:ok, supervisor_pid} = Supervisor.start_link(children, strategy: :one_for_one)
+
+# After the supervisor starts, we can query the supervisor for information regarding all child processes supervised under it
+Supervisor.which_children(supervisor_pid) |> IO.inspect(label: "Supervisor's children")
+```
+
+Now lets see what happens if our Stack Genserver process crashes
+
+```elixir
+GenServer.whereis(:stack_1) |> IO.inspect(label: "Stack Genserver Process pid")
+GenServer.call(:stack_1, {:push, 10})
+GenServer.call(:stack_1, {:push, 20})
+GenServer.cast(:stack_1, :pop)
+GenServer.cast(:stack_1, :pop)
+GenServer.cast(:stack_1, :pop)
+
+:sys.get_state(GenServer.whereis(:stack_1))
+|> IO.inspect(label: "Genserver state just before crash")
+
+# Boom! Stack genserver crashes..
+GenServer.cast(:stack_1, :pop)
+
+# wait for the supervisor to restart the Stack Server process
+Process.sleep(200)
+GenServer.whereis(:stack_1) |> IO.inspect(label: "Restarted stack Genserver Process pid")
+:sys.get_state(GenServer.whereis(:stack_1)) |> IO.inspect(label: "Genserver state after crash")
+```
+
+Now lets dive into some important concepts around superviors
+
+* Child specs
+* Supervision Strategies
+* Restart Strategies
+* Types of supervisors
+* Visualizing supervision trees
+
+When does a supervisor process exit?
+
+## Child Specs
+
+When starting a supervisor, we may pass a list of child specifications. Those specifications tell how the supervisor should start, stop and restart each of its children.
+
+A supervisor can supervise a generic process were the process is known as a `worker`.
+A supervisor can also supervise another supervisor process, this is commonly seen in a supervision tree. In such cases the supervised process is referred to as a `supervisor` and not a `worker`.
+
+The child specification is a map containing up to 6 elements. The first two keys in the following list are required, and the remaining ones are optional.
+
+* `:id` - any term used to identify the child specification internally by the supervisor; defaults to the given module. This key is required.
+
+  The id is just an internal identifier used only by the supervisor of a worker. It has to be unique for all workers in the same supervisor.
+
+  Donot confuse the :id with the name, the name is the value that you can address a process with, instead of using its PID.
+
+  For supervisors, in the case of conflicting :id values, the supervisor will refuse to initialize and require explicit IDs. This is not the case for dynamic supervisors though.
+
+* `:start` - a tuple with the module-function-args to be invoked to start the child process. This key is required. This is a required key.
+
+* `:restart` - an atom that defines when a terminated child process should be restarted. This key is optional and defaults to :permanent.
+
+* `:shutdown` - an integer or atom that defines how a child process should be terminated. This key is optional and defaults to 5_000 if the type is :worker or :infinity if the type is :supervisor.
+
+* `:type` - specifies that the child process is a :worker or a :supervisor. This key is optional and defaults to :worker.
+
+* `:modules` - a list of modules used by hot code upgrade mechanisms to determine which processes are using certain modules.
+
+---
+
+A child specification can be one of the following...
+
+* A map representing the child specification itself
+
+  ```
+   children = [ %{
+      id: :stack_1,
+      start: {Stack, :start_link, [%{initila_value: 0, name: :stack_1}]}
+    } ]
+  ```
+
+  The map above defines a child with :id of :stack_1 that is started by calling `Stack.start_link(%{initial_value: 0, name: :stack_1})`.
+
+* A tuple with a module as first element and the start argument as second
+
+  Elixir allows us to pass a tuple with the module name and the start_link argument instead of the specification.
+
+  ```
+  children = [
+    {Stack, %{initial_value: 0, name: :stack_1}}
+  ]
+  ```
+
+  When specifying child specs like this the supervisor will then invoke `Stack.child_spec(%{initial_value: 0, name: :stack_1})` to retrieve a child specification. Now the Stack Genserver module is responsible for building its own specification.
+
+  So the Stack module can define its own child_spec like
+
+  ```
+  def child_spec(arg) do
+    %{
+      id: Stack,
+      start: {Stack, :start_link, [arg]}
+    }
+  end
+  ```
+
+  Luckily for us, use GenServer already defines a `Stack.child_spec/1` exactly like above, so we don't need to write the definition above. We can customize the automatically generated child_spec/1 function by passing options directly to use GenServer, more on this later.
+
+* Finally there is one more way to specifiy child_specs by only specifying the module name as a child like
+
+  ```
+    children = [ Stack ]
+  ```
+
+  This will equivalent to `{Stack, []}` which in our case would be invalid since `Stack.start_link/1` requires a initial value so passing a empty list would not work.
+
+### The `Supervisor.child_spec/2` function
+
+When using the shorthands like the `{module, arg}` tuple or a module name only as a child specification we can choose to modify the generate child specifications by using the `Supervisor.child_spec/2` function.
+
+The `Supervisor.child_spec/2` function can be used to builds and overrides a child specification.
+
+If a two-element tuple in the shape of `{module, arg}` is given, the child specification is retrieved by calling `module.child_spec(arg)`.
+
+If a module is given, the child specification is retrieved by calling module.child_spec([]).
+
+After the child specification is retrieved, the fields on overrides are directly applied on the child spec.
+
+For example we can use the shorthand `{Stack, %{initial_value: 0, name: :stack_1}}` but this would would set an `id: Stack` to child, since thats the default implmentation of `module.child_spec(arg)`. However we can overide this behaviour like
+
+```
+children = [
+  Supervisor.child_spec({Stack, %{initial_value: 0, name: :stack_1}}, id: :special_stack)
+  ]
+```
+
+## Resources
+
+* https://hexdocs.pm/elixir/1.14.4/Supervisor.html
+* https://elixir-lang.org/getting-started/mix-otp/supervisor-and-application.html
