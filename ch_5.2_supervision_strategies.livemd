@@ -204,3 +204,9 @@ Supervisor.which_children(supervisor_pid) |> IO.inspect(label: "Supervisors Chil
 
 Kino.Process.render_sup_tree(supervisor_pid)
 ```
+
+### Resources
+
+<!-- livebook:{"break_markdown":true} -->
+
+* https://www.erlang.org/doc/design_principles/sup_princ.html#restart-strategy

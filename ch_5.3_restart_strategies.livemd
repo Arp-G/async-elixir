@@ -1,0 +1,247 @@
+# Supervisor restart strategies
+
+## Restart Strategies
+
+In the previous chapter we learnt about supervision strategies which governs wether a supervisor will restart other children when one of the child process crashes.
+
+But when should the supervisor consider a process to have crashed? Process can also gracefully terminate were we might not want to restart them or they might crash due to some error.
+
+This is were restart strategies are helpful. Unlike supervision strategies which are for entire supervision tree, restart strategies can be defined for each individual child process.
+
+As always lets look at some examples...
+
+<!-- livebook:{"break_markdown":true} -->
+
+Restart values can either be specified in the child spec like
+
+```
+children = [
+  %{
+    id: :stack_1,
+    start: {Stack, :start_link, []},
+
+    restart: :temporary # <================= Here
+  }
+]
+```
+
+Or it can also be specified when creating a GenServer like
+
+```
+use GenServer, restart: :transient
+```
+
+We already learnt that GenServer's define a default child_spec function, we can customize the automatically generated child_spec/1 function, by passing such options directly to `use GenServer`.
+
+To understand how the different restart options work lets create a simple GenServer and add it to the supervision tree with different restart options.
+
+```elixir
+defmodule CrashDummyServer do
+  use GenServer
+
+  def start_link(name) do
+    random_state = System.unique_integer([:positive])
+    GenServer.start_link(__MODULE__, {random_state, name}, name: name)
+  end
+
+  ## Callbacks
+
+  @impl true
+  def init({random_value, name}) do
+    IO.inspect("#{name} starting up!")
+    {:ok, random_value}
+  end
+
+  @impl true
+  def handle_cast(:stop_gracefully, state) do
+    # Returning this value makes the GenServer stop gracefully with :normal reason
+    # If reason is neither :normal, :shutdown, nor {:shutdown, term} an error is logged.
+    {:stop, :normal, state}
+  end
+
+  @impl true
+  def handle_cast(:crash, state) do
+    process_pid = self() |> inspect()
+    raise "BOOM! CrashDummyServer process: #{process_pid} crashed!"
+    {:noreply, state}
+  end
+end
+```
+
+```elixir
+defmodule CrashDummySupervisor do
+  use Supervisor
+
+  def start_link() do
+    Supervisor.start_link(__MODULE__, :noop, name: __MODULE__)
+  end
+
+  @impl true
+  def init(_) do
+    # Supervision tree
+    children = [
+      child_spec(:permanent_dummy, :permanent),
+      child_spec(:temporary_dummy, :temporary),
+      child_spec(:transient_dummy, :transient)
+    ]
+
+    # Notice the supervision strategy
+    Supervisor.init(children, strategy: :one_for_one)
+  end
+
+  defp child_spec(name, restart_strategy) do
+    Supervisor.child_spec(
+      {CrashDummyServer, name},
+      id: name,
+      # <= Specifying the restart strategy
+      restart: restart_strategy
+    )
+  end
+end
+```
+
+In the above code we create a simple GenServer which will crash when we send the `:boom` message to it and it will stop gracefully if we send the `:stop_gracefully` message.
+
+In the Supervisor we start 3 instances of this GenServer with the 3 different restart strategies.
+
+* `:permanent` - This is the default restart strategy, it means the child process is **always** restarted no matter if it crashes or is shutdown gracefully.
+* `:temporary` - with this restart strategy the child process is never restarted, even in case of abnormal termination like when the process crash. In other words any termination (even abnormal) is considered successful.
+* `:transient` - the child process is restarted only if it terminates abnormally, i.e., with an exit reason other than :normal, :shutdown, or {:shutdown, term}.
+
+Now lets test this in action...
+
+<!-- livebook:{"break_markdown":true} -->
+
+---
+
+### `:permanent` restart strategy
+
+```elixir
+{:ok, supervisor_pid} = CrashDummySupervisor.start_link()
+Supervisor.which_children(supervisor_pid)
+```
+
+```elixir
+# Test graceful termination of child with `:permanent` restart strategy
+# Notice how the GenServer is restarted
+GenServer.cast(:permanent_dummy, :stop_gracefully)
+```
+
+```elixir
+# Test abnormal termination of child with `:permanent` restart strategy
+# Notice how the GenServer is restarted
+GenServer.cast(:permanent_dummy, :crash)
+```
+
+---
+
+### `:temporary` restart strategy
+
+```elixir
+# Test graceful termination of child with `:temporary` restart strategy
+# Notice how the GenServer is NOT restarted
+GenServer.cast(:temporary_dummy, :stop_gracefully)
+```
+
+```elixir
+# Notice how temporary_dummy is no longer present in the list of children
+Supervisor.which_children(supervisor_pid) |> IO.inspect(label: "Supervisors Children")
+
+# Restart the Supervisor so that all child processes are start again
+Supervisor.stop(supervisor_pid)
+{:ok, supervisor_pid} = CrashDummySupervisor.start_link()
+```
+
+```elixir
+# Test abnormal termination of child with `:temporary` restart strategy
+# Notice how the GenServer is NOT restarted
+GenServer.cast(:temporary_dummy, :stop_gracefully)
+```
+
+```elixir
+# Notice how temporary_dummy is no longer present in the list of children
+Supervisor.which_children(supervisor_pid) |> IO.inspect(label: "Supervisors Children")
+```
+
+---
+
+### `:transient` restart strategy
+
+```elixir
+# Restart the Supervisor so that all child processes are start again
+Supervisor.stop(supervisor_pid)
+{:ok, supervisor_pid} = CrashDummySupervisor.start_link()
+```
+
+```elixir
+Supervisor.which_children(supervisor_pid) |> IO.inspect(label: "Supervisors Children")
+
+# Test graceful termination of child with `:transient` restart strategy
+# Notice how the GenServer is NOT restarted since it was stopped gracefully
+GenServer.cast(:transient_dummy, :stop_gracefully)
+```
+
+```elixir
+# Notice how the transient child has a pid "undefined` since its no longer running
+Supervisor.which_children(supervisor_pid)
+```
+
+```elixir
+# Restart the Supervisor so that all child processes are start again
+Supervisor.stop(supervisor_pid)
+{:ok, supervisor_pid} = CrashDummySupervisor.start_link()
+```
+
+```elixir
+# Test abnormal termination of child with `:transient` restart strategy
+# Notice how the GenServer is restarted since it was stopped abnormally
+GenServer.cast(:transient_dummy, :crash)
+```
+
+```elixir
+# Notice how transient_dummy was restarted and all children are running
+Supervisor.which_children(supervisor_pid) |> IO.inspect(label: "Supervisors Children")
+```
+
+## Max Restarts
+
+Till now we have looked at different options like `:id`, `:strategy`, `:name`, `:restart`, etc in the supervisor's child specifictions.
+
+Lets look at some the remaining options the child spec supports...
+
+* `:max_restarts` - the maximum number of restarts allowed in a time frame. Defaults to 3.
+* `:max_seconds` - the time frame in which :max_restarts applies. Defaults to 5.
+
+The `:max_restarts` and `:max_seconds` options govern the [maximum Restart Intensity](https://www.erlang.org/doc/design_principles/sup_princ.html#maximum-restart-intensity) of a supervisor.
+
+The supervisors have a built-in mechanism to limit the number of restarts which can occur in a given time interval.
+
+If more than `max_restarts` number of restarts occur in the last `max_seconds` seconds, the supervisor terminates all the child processes and then itself. The termination reason for the supervisor itself in that case will be `:shutdown`.
+
+When the supervisor terminates, then the next higher-level supervisor takes some action. It either restarts the terminated supervisor or terminates itself.
+
+The intention of the restart mechanism is to prevent a situation where a process repeatedly dies for the same reason, only to be restarted again.
+
+## Shutdown strategy
+
+We can pass an optional `:shutdown` option when defining the child specifications of a supervisor.
+
+This options tells the supervisor how to shutdown a child. by default its set to `5_000` which means the supervisor will main for maximum 5 seconds for the process to shutdown gracefully after which it will forcefully kill the child process.
+
+* Any integer >= 0 - the amount of time in milliseconds that the supervisor will wait for its children to terminate after emitting a `Process.exit(child, :shutdown)` signal. If the child process is not trapping exits, the initial :shutdown signal will terminate the child process immediately. If the child process is trapping exits, it has the given amount of time to terminate. If it doesn't terminate within the specified time, the child process is unconditionally terminated by the supervisor via `Process.exit(child, :kill)`.
+
+* `:brutal_kill` - the child process is unconditionally and immediately terminated using `Process.exit(child, :kill)`.
+
+* `:infinity` - the supervisor will wait indefinitely for the child to terminate.
+
+## Key points
+
+* When the supervisor starts, it traverses all child specifications and then starts each child in the order they are defined. This is done by calling the function defined under the :start key in the child specification and typically defaults to start_link/1
+
+* When a supervisor shuts down, it **terminates all children in the opposite order they are listed**. The termination happens by sending a shutdown exit signal, via `Process.exit(child_pid, :shutdown)`, to the child process and then awaiting for a time interval for the child process to terminate. This interval defaults to 5000 milliseconds.
+
+  If the child process does not terminate in this interval, the supervisor abruptly terminates the child with reason `:kill`. The shutdown time can be configured in the child specification which is fully detailed in the next section.
+
+* If the child process is not trapping exits, it will shutdown immediately when it receives the first exit signal. If the child process is trapping exits, then the terminate callback is invoked, and the child process must terminate in a reasonable time interval before being abruptly terminated by the supervisor.
+
+* When elixir exits, then that will travel downward the supervision tree. That happens because supervisors always trap exists (for multiple reasons). So when they get an exit signal they try to stop all their children. They do so by sending an exit signal to their children one-by-one, with an timeout before they brutal_kill them. That timeout is the `shutdown` you're setting. But the time is all you set by that. Once all children are stopped the supervisor itself stops .
