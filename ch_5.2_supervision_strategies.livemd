@@ -8,15 +8,15 @@ Mix.install([
 
 ## Supervision strategies
 
-When starting a supervisor we can specify a supervision strategy. The supervision strategy dictates what happens when one of the children crashes.
+When starting a supervisor, we have the ability to specify a supervision strategy. This strategy determines the actions taken by the supervisor when one of its child processes crashes.
 
-In the previous chapter we started the supervisor for our Stack GenServer process like `Supervisor.start_link(children, strategy: :one_for_one)`.
+In the previous chapter, we started the supervisor for our Stack GenServer process using the `Supervisor.start_link(children, strategy: :one_for_one)` function call.
 
-Over hear the `:stategy` options passed to the supervisor refers to the supervision starategy.
+Here, the `:strategy` option passed to the supervisor refers to the supervision strategy being used.
 
-Lets go through each one of the supervision strategies in detail.
+Now, let's explore each of the supervision strategies in detail.
 
-To demonstrate this consider this simple GenServer which will crash if we send it a `:boom` message. The Genserver will stores a random positive integer in its state.
+To illustrate the different strategies, we'll consider a simple GenServer that crashes if we send it a `:boom` message. This GenServer stores a random positive integer in its state.
 
 ```elixir
 defmodule CrashDummyServer do
@@ -77,20 +77,23 @@ defmodule CrashDummySupervisor do
 end
 ```
 
-Here we are defining multiple instances of our "CrashDummyServer" GenServer in the supervision tree. When the supervisor is started it will automically strart three instances(processes) of the CrashDummyServer with names `:dummy1`, `:dummy2` and `:dummy3`.
+In the above code snippet, we define multiple instances of our "CrashDummyServer" GenServer within the supervision tree. When the supervisor is started, it automatically starts three instances (processes) of the CrashDummyServer with the names `:dummy1`, `:dummy2`, and `:dummy3`.
 
-Since we are trying to start 3 processes of the same GenServer we cannot use the `{CrashDummyServer, name}` child spec since it will attempt to assign the module name as the `:id` and therefore the same `:id` will be given to all the 3 processes. To avoid notice how we are using the `Supervisor.child_spec/2` function and explcitely pass a separate id to each process.
+Since we want to start three processes of the same GenServer, we cannot use the `{CrashDummyServer, name}` child specification because it would assign the module name as the `:id`, resulting in the same `:id` being given to all three processes. To avoid this, we use the `Supervisor.child_spec/2` function and explicitly pass a separate `:id` to each process.
 
-We are passing the supervision strategy as a argument to the `start_link/1` function and `init/1` callback so that we can restart the same supervisor with a different supervision strategy.
+The supervision strategy is passed as an argument to the `start_link/1` function and `init/1` callback so that we can restart the same supervisor with a different supervision strategy.
 
 ## :one_for_one
 
-With this supervision strategy if a child process terminates, only that process is restarted.
-This means if there are multiple child processes supervised by our supervisor in case of a crash only the crashed process is restarted while the other supervised processes keep running.
-
-Lets start the supervisor and observe what happens when one of the supervised process crashes.
+With the "one_for_one" supervision strategy, if a child process terminates, only that specific process is restarted. In other words, if there are multiple child processes supervised by our supervisor and one of them crashes, only the crashed process is restarted while the other supervised processes continue running unaffected.
 
 <!-- livebook:{"break_markdown":true} -->
+
+![](images/one_for_one.png)
+
+<!-- livebook:{"break_markdown":true} -->
+
+To observe the behavior of this strategy, we can start the supervisor and then intentionally crash one of the supervised processes to see the restart in action.
 
 We will use [Kino](https://hexdocs.pm/kino/) to draw the supervision tree before and after the crash.
 
@@ -121,13 +124,19 @@ Supervisor.which_children(supervisor_pid) |> IO.inspect(label: "Supervisors Chil
 Kino.Process.render_sup_tree(supervisor_pid)
 ```
 
-From the above example we can verify that with `:one_for_one` supervision strategy only the `:dummy2` GenServer process crashed and was restarted so it got a different process pid and state, the two other process `:dummy1` and `:dummy3` continued to run so their prorcess pid and state remain unchanged.
+Based on the example, we can confirm that when using the `:one_for_one` supervision strategy, only the `:dummy2` GenServer process crashed and was subsequently restarted. As a result, the restarted process obtained a new process ID and its state was reset. On the other hand, the `:dummy1` and `:dummy3` processes continued to run without any interruption, maintaining their respective process IDs and states unchanged.
 
 ## :one_for_all
 
-With `:one_for_all` restart strategy if a child process terminates, all other child processes are terminated and then all child processes (including the terminated one) are restarted.
+Upon restarting the CrashDummySupervisor with the `:one_for_all` restart strategy, if any child process terminates, all other child processes will be terminated as well. Following that, all child processes, including the terminated one, will be restarted.
 
-Lets restart our `CrashDummySupervisor` with `:one_for_all` strategy.
+<!-- livebook:{"break_markdown":true} -->
+
+![](images/one_for_all.png)
+
+<!-- livebook:{"break_markdown":true} -->
+
+Let's proceed with restarting the `CrashDummySupervisor` using the `:one_for_all` strategy.
 
 ```elixir
 # Stop the existing supervisor process
@@ -166,15 +175,23 @@ This time we can see that when the `:dummy_2` process crashed the supervisor res
 
 ## :rest_for_one
 
-With the `:rest_for_one` strategy if a child process terminates, the terminated child process and the rest of the children which were started after it, are terminated and restarted.
+With the `:rest_for_one` strategy, if a child process terminates, not only the terminated child process but also the subsequent child processes that were started after it will be terminated and restarted.
 
-This is helpfull if you need to restart only a part of your supervision tree, such that when a process crashes only the process dependent on that crashed process are restarted.
+This strategy is useful when you want to restart only a portion of your supervision tree. In this case, when a process crashes, only the processes dependent on the crashed process will be restarted.
 
-Therefore the order in which child process are specified in a supervision tree is very important. A supervisor will attempt to start the child process in the order in which they are specified in the supervisor child specification. Also in case of a crash a supervisor will restart the child process following this order.
+#### Note:
 
-When a supervisor shuts down, it terminates all children in the opposite order they are listed.
+The order in which child processes are specified in a supervision tree is crucial. A supervisor will attempt to start the child processes in the exact order specified in the supervisor child specification. Similarly, when a process crashes, the supervisor will restart the child processes in the same order.
 
-Lets check this out in action, with this strategy in our example when the `:dummy2` process crashes only the `:dummy2` and `:dummy3` process are restarted while `:dummy1` process continues to run.
+When a supervisor shuts down, it terminates all children in the reverse order in which they are listed.
+
+<!-- livebook:{"break_markdown":true} -->
+
+![](images/rest_for_one.png)
+
+<!-- livebook:{"break_markdown":true} -->
+
+Let's see this strategy in action with our example. When the `:dummy2` process crashes, only the `:dummy2` and `:dummy3` processes will be restarted, while the `:dummy1` process will continue running.
 
 ```elixir
 Supervisor.stop(CrashDummySupervisor)
@@ -209,4 +226,4 @@ Kino.Process.render_sup_tree(supervisor_pid)
 
 <!-- livebook:{"break_markdown":true} -->
 
-* https://www.erlang.org/doc/design_principles/sup_princ.html#restart-strategy
+* The images for the different restart stragies are taken from the [erlang documentation](https://www.erlang.org/doc/design_principles/sup_princ.html#restart-strategy)
