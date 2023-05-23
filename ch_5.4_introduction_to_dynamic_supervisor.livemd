@@ -1,0 +1,225 @@
+# Introduction to Dynamic Supervisor
+
+## The Dynamic Supervisor
+
+In the previous chapter, we learned about the Supervisor behavior, which enables us to supervise processes and restart them in case of failures, ensuring fault tolerance. However, the Supervisor behavior requires us to specify all the child processes it will supervise in advance as child specifications. In other words, the Supervisor module was primarily designed to handle static children.
+
+When the supervisor starts, it creates and starts the child processes in the specified order, and when the supervisor is stopped, it terminates the processes in the reverse order.
+
+On the other hand, a DynamicSupervisor **starts with no children** initially. Instead, children are started on demand using the `start_child/2` function, and there is **no specific ordering** between the children. This provides a lot of flexibility as we can dynamically add and remove child processes to be supervised. The DynamicSupervisor can efficiently handle a large number of children by utilizing optimized data structures and perform certain operations, such as shutting down, concurrently.
+
+<!-- livebook:{"break_markdown":true} -->
+
+### Key points
+
+* DynamicSupervisor is a specialized type of Supervisor designed to handle dynamic children. Note that in Erlang we have only one supervisor. These behaviors like DynamicSupervisor and PartitionSupervisor are abstraction built on top of the basic Supervisor to address common use cases more conveniently.
+
+* Dynamic supervisors start without any children initially, and there is no predefined ordering between the children. Children can be added to the supervisor dynamically as needed, without any specific sequence or arrangement.
+
+* The only available supervision strategy for DynamicSupervisor is `:one_for_one`.
+
+* The `id` of a child in a DynamicSupervisor is always `:undefined`. This is because dynamically supervised children are created from the same child specification, and assigning a specific id to each child would result in conflicts.
+
+<!-- livebook:{"break_markdown":true} -->
+
+### `Supervisor.start_child/2` vs `DynamicSupervisor.start_child/2`
+
+It may appear confusing that both the Supervisor and DynamicSupervisor modules provide a function called `start_child/2` to dynamically start supervised child processes. This raises the question of what distinguishes the two and why we have a dedicated DynamicSupervisor for dynamic child management.
+
+While it is possible to dynamically start and stop children from a standard Supervisor, the DynamicSupervisor is specifically designed to excel in this use case. There are differences in how a DynamicSupervisor handles its children compared to a regular supervisor. For instance, a DynamicSupervisor does not impose an inherent ordering among its children.
+
+On restart a DynamicSupervisor starts empty while a regular Supervisor typically starts along with all the child process defined in its child specifications. A DynamicSupervisor can concurrently shuts down all children when restarted unlike a standard supervisor which follows a specific restart order.
+
+Furthermore, the DynamicSupervisor module provides additional options, such as `:max_children`, which allows setting a limit on the maximum number of dynamically supervised children.
+
+Therefore it just more idiomatic and optimal to use a DynamicSupervisor instead of the regular Supervisor module when trying to dynamically start/stop supervised processes.
+
+## Usage
+
+Just like the regular supervisor module the DynamicSupervisor can either be started directly or defined as a module.
+
+Lets look at some examples...
+
+```elixir
+children = [{DynamicSupervisor, name: MyTestDynamicSupervisor}]
+
+# Th only possible strategy with DynamicSupervisor is :one_for_one 
+Supervisor.start_link(children, strategy: :one_for_one)
+```
+
+We will now create a simple GenServer that we can start under this supervisor
+
+```elixir
+defmodule TestServer do
+  use GenServer
+
+  def start_link(name) do
+    GenServer.start_link(__MODULE__, :noop, name: name)
+  end
+
+  ## Callbacks
+
+  @impl true
+  def init(_arg) do
+    {:ok, :noop}
+  end
+
+  @impl true
+  def handle_call({:echo, arg}, _from, state) do
+    {:reply, arg, state}
+  end
+end
+```
+
+Now we can use the `DynamicSupervisor.start_child(supervisor, child_spec)` function to dynamically start a child process under the supervisor. Notice how we need to pass a child spec to the function.
+
+```elixir
+{:ok, echo_1} = DynamicSupervisor.start_child(MyTestDynamicSupervisor, {TestServer, :echo1})
+{:ok, echo_2} = DynamicSupervisor.start_child(MyTestDynamicSupervisor, {TestServer, :echo2})
+```
+
+Notice how we dynamically started 2 instances of our `TestServer` GenServer process under the `MyTestDynamicSupervisor` DynamicSupervisor.
+
+```elixir
+DynamicSupervisor.count_children(MyTestDynamicSupervisor)
+```
+
+```elixir
+# Notice how the id is undefined for a DynamicSupervisor
+DynamicSupervisor.which_children(MyTestDynamicSupervisor)
+```
+
+We can easily terminate a dynamically started child
+
+```elixir
+DynamicSupervisor.terminate_child(MyTestDynamicSupervisor, echo_2)
+```
+
+```elixir
+DynamicSupervisor.count_children(MyTestDynamicSupervisor)
+```
+
+```elixir
+DynamicSupervisor.which_children(MyTestDynamicSupervisor)
+```
+
+---
+
+### Module based DynamicSupervisor
+
+Now lets use a module based DynamicSupervisor. Just like the regular Supervisor behaviour the DynamicSupervisor behaviour only has one callback that we must implement that is the `init/1` callback.
+
+Also similar to the regular Supervisor module when starting a DynamicSupervisor we can pass options like `:name`, `:strategy`, `:max_restarts` and `:max_seconds`.
+
+Two new options that are available with DynamicSupervisors are
+
+* `:max_children` -  the maximum amount of children to be running under this supervisor at the same time. When :max_children is exceeded, start_child/2 returns {:error, :max_children}. Defaults to :infinity.
+
+* `:extra_arguments` - arguments that are prepended to the arguments specified in the child spec given to `start_child/2`. Defaults to an empty list.
+
+To understand this better lets look at an example:
+
+```elixir
+# A simple GenServer module which we would start under our supervisor 
+defmodule TestServerV2 do
+  use GenServer
+
+  def start_link(extra_arg, name, arg) do
+    GenServer.start_link(__MODULE__, [extra_arg, arg], name: name)
+  end
+
+  ## Callbacks
+
+  @impl true
+  def init([extra_arg, arg]) do
+    IO.inspect(
+      "New TestServerV2 started with extra_arg = #{inspect(extra_arg)} and arg = #{inspect(arg)}"
+    )
+
+    {:ok, :noop}
+  end
+
+  @impl true
+  def handle_call({:echo, arg}, _from, state) do
+    {:reply, arg, state}
+  end
+end
+```
+
+```elixir
+defmodule MyTestDynamicSupervisorV2 do
+  # The DynamicSupervisor behaviour that defines a default child_spec/1
+  use DynamicSupervisor
+
+  def start_link(init_arg) do
+    DynamicSupervisor.start_link(__MODULE__, init_arg, name: __MODULE__)
+  end
+
+  # A public api to easily start child process under this supervisor
+  def start_child(name, arg) do
+    child_spec = %{id: TestServerV2, start: {TestServerV2, :start_link, [name, arg]}}
+
+    # This will start an child process of the TestServerV2 by calling 
+    # TestServerV2.start_link(init_arg, name, arg)
+    DynamicSupervisor.start_child(__MODULE__, child_spec)
+  end
+
+  @impl true
+  def init(init_arg) do
+    # Returns a tuple containing the supervisor initialization options.
+    DynamicSupervisor.init(
+      strategy: :one_for_one,
+      max_children: 2,
+      extra_arguments: [init_arg]
+    )
+    |> IO.inspect(label: "DynamicSupervisor initialized with")
+  end
+end
+```
+
+Few things to note in the above code snipper:
+
+* We are using the `DynamicSupervisor.init/1` helper function to generate a tuple that initializes the dynamic supervisor with proper options in its `init/1` callback.
+
+* We have added a helper function `MyTestDynamicSupervisorV2.start_child/2` to dynamically start supervised child processes under our dynamic supervisor.
+
+* We have passed additional options like the `max_children` to limit the number of children the dynamic supervisor can start.
+
+* The `extra_arguments: [init_arg]` option will automatically prepend the `init_arg` argument to every child process started under this supervisor. This is especially useful if we want to always send a specific argument to every child process that is started under this supervisor.
+
+[Note: Similar to the regular supervisor module the DynamicSupervisor module also defines a default `child_spec/1` function so we can use shorthand syntax when defining child specs to pass to `DynamicSupervisor.start_child/2`]
+
+```elixir
+{:ok, supervisor_pid} = MyTestDynamicSupervisorV2.start_link("Elixir is ❤")
+```
+
+Now let us dynamically start and stop child process under our supervisor.
+
+```elixir
+{:ok, echo_1} = MyTestDynamicSupervisorV2.start_child(:echov2_1, :yolo)
+{:ok, echo_2} = MyTestDynamicSupervisorV2.start_child(:echov2_2, :awesome_elixir)
+```
+
+Notice how the child processes that were started have received the "Elixir is ❤" specified as `:extra_arguments` along with the arguments that were passed.
+
+```elixir
+DynamicSupervisor.count_children(MyTestDynamicSupervisor) |> IO.inspect()
+DynamicSupervisor.which_children(MyTestDynamicSupervisor)
+```
+
+```elixir
+DynamicSupervisor.start_child(MyTestDynamicSupervisorV2, {TestServerV2, :echo3})
+```
+
+```elixir
+DynamicSupervisor.terminate_child(MyTestDynamicSupervisorV2, echo_1)
+DynamicSupervisor.count_children(MyTestDynamicSupervisor) |> IO.inspect()
+DynamicSupervisor.which_children(MyTestDynamicSupervisor)
+```
+
+In future chapters, we will delve into the topic of scaling a DynamicSupervisor by utilizing a PartitionSupervisor. We will also go through more examples of how to use dynamic supervisors in real use cases.
+
+## Resources
+
+* https://hexdocs.pm/elixir/DynamicSupervisor.html
+* https://elixirforum.com/t/different-between-supervisor-start-child-and-dynamicsupervisor-start-child/14585/3
