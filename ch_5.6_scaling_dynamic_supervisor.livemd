@@ -1,0 +1,166 @@
+# Scaling Dynamic Supervisors
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.9.0"}
+])
+```
+
+## The scalability problem with DynamicSupervisors
+
+In previous chapters, we learned about the DynamicSupervisor, which is effective for dynamically spawning and supervising child processes. However, in certain scenarios, the DynamicSupervisor can become a bottleneck.
+
+The DynamicSupervisor operates as a single process responsible for starting other processes. In high-demand situations where there are numerous requests to start new child processes, the DynamicSupervisor may struggle to keep up. Additionally, if a child process experiences delays during initialization (e.g., being stuck in the `init/1` callback), it can block the DynamicSupervisor and prevent it from starting new child processes.
+
+Lets simulate such a situation with an example...
+
+```elixir
+# A minimal GenServer which takes 2 seconds to initialize
+defmodule SlowGenServer do
+  use GenServer
+
+  def start_link(args) do
+    GenServer.start_link(__MODULE__, args)
+  end
+
+  @impl true
+  def init(_args) do
+    # Simulate slow start of a GenServer by sleeping for 1 second
+    :timer.sleep(1000)
+    IO.inspect("Started new SlowGenServer #{inspect(self())}")
+    {:ok, :noop}
+  end
+end
+```
+
+Note: In real scenarios, it's important to avoid performing time-consuming tasks in the init/1 callback of a GenServer. Instead, we should leverage the handle_continue/2 callback to handle long-running tasks and prevent them from blocking the GenServer startup process. However, for the purpose of this example, let's proceed with trying it out.
+
+```elixir
+# Start a DynamicSupervisor named "MySlowDynamicSupervisor"
+{:ok, supervisor_pid} =
+  DynamicSupervisor.start_link(
+    name: MySlowDynamicSupervisor,
+    # Use the default child_spec/1 function of the GenServer
+    child_spec: DynamicSupervisor.child_spec([])
+  )
+```
+
+```elixir
+# Lets start 5 instances of the SlowGenServer process under the DynamicSupervisor
+for _i <- 1..5 do
+  # Start a new process that in turn starts a new child process under the dynamic supervisor
+  spawn(fn -> DynamicSupervisor.start_child(MySlowDynamicSupervisor, SlowGenServer) end)
+end
+```
+
+Notice how the DynamicSupervisor starts each child process one by one and is blocked until the previous child process is started. In real-world scenarios, this can cause significant delays in starting child processes under a single DynamicSupervisor, resulting in potential bottlenecks and performance issues.
+
+<!-- livebook:{"break_markdown":true} -->
+
+Lets visualize the resulting supervision tree
+
+```elixir
+Kino.Process.render_sup_tree(supervisor_pid)
+```
+
+Notice how all the 5 instances of the `SlowGenServer` process are spawned under the same `MySlowDynamicSupervisor` instance.
+
+## Using a PartitionSupervisor to scale DynamicSupervisors
+
+To address the aforementioned problem, we can use a PartitionSupervisor to start multiple instances of the DynamicSupervisor. The PartitionSupervisor acts as a supervisor for multiple DynamicSupervisor processes, each running in a separate partition.
+
+When a new child process needs to be started, the PartitionSupervisor selects one of the DynamicSupervisor processes to handle the request. This distribution of child process creation across multiple DynamicSupervisors helps distribute the workload and prevents bottlenecks that can occur when relying on a single DynamicSupervisor.
+
+Lets see this in action...
+
+```elixir
+# Stop the existing dynamic supervisor
+Supervisor.stop(MySlowDynamicSupervisor)
+
+# Start a partition supervisor with a dynamic supervisor as the child process for each partition
+{:ok, supervisor_pid} =
+  PartitionSupervisor.start_link(
+    name: MySlowPartitionSupervisor,
+    # Create 6 partitions
+    partitions: 6,
+    # Use the default child_spec/1 function of DynamicSupervisor
+    child_spec: DynamicSupervisor.child_spec([])
+  )
+```
+
+In the code above, we start a partition supervisor that will by create six partitions and will start a dynamic supervisor for each partition.
+
+```elixir
+Kino.Process.render_sup_tree(supervisor_pid)
+```
+
+Now, instead of directly calling the DynamicSupervisor by its name, we access it through the PartitionSupervisor using the `{:via, PartitionSupervisor, {partition_supervisor_name, key}}` format.
+
+Now lets try again to start 6 child processes under the supervisor
+
+```elixir
+for i <- 1..5 do
+  # Start a new process that in turn starts a new child process under one of the
+  # dynamic supervisors via the partition supervisor
+  spawn(fn ->
+    DynamicSupervisor.start_child(
+      {:via, PartitionSupervisor, {MySlowPartitionSupervisor, i}},
+      SlowGenServer
+    )
+  end)
+end
+```
+
+In the provided code, we spawn five new processes, and each process starts a new child process under one of the dynamic supervisors via the partition supervisor.
+
+We use the numbers 1 to 5 as the routing keys for each child process. With six partitions available, each child process will be started under a separate dynamic supervisor.
+
+<!-- livebook:{"break_markdown":true} -->
+
+Lets visualize the resulting supervision tree
+
+```elixir
+Kino.Process.render_sup_tree(supervisor_pid)
+```
+
+In the provided supervision tree, we can observe that five instances of the DynamicSupervisor were started under the `MySlowPartitionSupervisor` PartitionSupervisor. Each of these dynamic supervisors represents a separate partition.
+
+Furthermore, under each dynamic supervisor, a separate instance of the `SlowGenServer` process was started.
+
+<!-- livebook:{"break_markdown":true} -->
+
+---
+
+By leveraging the PartitionSupervisor as the entry point, we can abstract away the details of the individual dynamic supervisors and rely on the routing strategy to handle the selection of the appropriate dynamic supervisor for starting the child processes. This approach allows for efficient distribution of child processes across multiple dynamic supervisors, reducing the load on any single supervisor and avoiding potential bottlenecks.
+
+As a result, the child processes are started much faster compared to the previous example, where we relied on a single dynamic supervisor.
+
+<!-- livebook:{"break_markdown":true} -->
+
+Note: In most real-world scenarios, the supervisor and partition supervisor are typically started as part of the application's supervision tree. Instead of manually calling start_link/1, we can define the supervisors and their child specifications in the application module.
+
+Here's an example of how we can start the partition supervisor under a supervision tree:
+
+```
+defmodule MyApp.Application do
+  use Application
+
+  def start(_type, _args) do
+    children = [
+      {PartitionSupervisor,
+       child_spec: DynamicSupervisor,
+       name: MySlowPartitionSupervisor}
+    ]
+
+    opts = [strategy: :one_for_one]
+    Supervisor.start_link(children, opts)
+  end
+end
+```
+
+<!-- livebook:{"break_markdown":true} -->
+
+### Resources:
+
+* https://hexdocs.pm/elixir/1.15.0-rc.0/PartitionSupervisor.html#content
+* https://blog.appsignal.com/2022/09/20/fix-process-bottlenecks-with-elixir-1-14s-partition-supervisor.html
