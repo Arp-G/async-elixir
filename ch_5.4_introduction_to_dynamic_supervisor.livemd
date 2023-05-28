@@ -1,5 +1,11 @@
 # Introduction to Dynamic Supervisor
 
+```elixir
+Mix.install([
+  {:kino, "~> 0.9.0"}
+])
+```
+
 ## The Dynamic Supervisor
 
 In the previous chapter, we learned about the Supervisor behavior, which enables us to supervise processes and restart them in case of failures, ensuring fault tolerance. However, the Supervisor behavior requires us to specify all the child processes it will supervise in advance as child specifications. In other words, the Supervisor module was primarily designed to handle static children.
@@ -44,7 +50,7 @@ Lets look at some examples...
 children = [{DynamicSupervisor, name: MyTestDynamicSupervisor}]
 
 # Th only possible strategy with DynamicSupervisor is :one_for_one 
-Supervisor.start_link(children, strategy: :one_for_one)
+{:ok, supervisor_pid} = Supervisor.start_link(children, strategy: :one_for_one)
 ```
 
 We will now create a simple GenServer that we can start under this supervisor
@@ -76,6 +82,11 @@ Now we can use the `DynamicSupervisor.start_child(supervisor, child_spec)` funct
 ```elixir
 {:ok, echo_1} = DynamicSupervisor.start_child(MyTestDynamicSupervisor, {TestServer, :echo1})
 {:ok, echo_2} = DynamicSupervisor.start_child(MyTestDynamicSupervisor, {TestServer, :echo2})
+```
+
+```elixir
+# Lets visualize the supervision tree
+Kino.Process.render_sup_tree(supervisor_pid)
 ```
 
 Notice how we dynamically started 2 instances of our `TestServer` GenServer process under the `MyTestDynamicSupervisor` DynamicSupervisor.
@@ -209,6 +220,11 @@ DynamicSupervisor.which_children(MyTestDynamicSupervisor)
 
 ```elixir
 DynamicSupervisor.start_child(MyTestDynamicSupervisorV2, {TestServerV2, :echo3})
+```
+
+```elixir
+# Lets visualize the supervision tree
+Kino.Process.render_sup_tree(supervisor_pid)
 ```
 
 ```elixir
