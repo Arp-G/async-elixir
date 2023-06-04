@@ -1,0 +1,505 @@
+# Project - Building a Download Manager
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.9.0"},
+  {:elixir_uuid, "~> 1.2"},
+  {:httpoison, "~> 2.1"},
+  {:sizeable, "~> 1.0"}
+])
+```
+
+## Section
+
+```elixir
+defmodule Download do
+  @enforce_keys [:id, :src, :dest, :from]
+  defstruct [
+    :id,
+    :name,
+    :src,
+    :dest,
+    :from,
+    :pid,
+    :size,
+    :status,
+    :bytes_downloaded,
+    :exit_status,
+    :error_reason,
+    :start_time,
+    :end_time,
+    :resp,
+    :fd
+  ]
+end
+```
+
+```elixir
+defmodule DownloadWorker do
+  @moduledoc """
+  Worker Genserver for downloading a file
+  """
+  use GenServer, restart: :temporary
+  alias Download
+  require Logger
+
+  # GenServer API
+
+  def start_link(args, opts \\ []), do: GenServer.start_link(__MODULE__, args, opts)
+
+  @impl GenServer
+  def init(%Download{} = download) do
+    Logger.info("Start new download worker: #{download.id}")
+    # Makes your process call terminate/2 upon exit.
+    Process.flag(:trap_exit, true)
+    Process.send_after(self(), :kickoff, 0)
+
+    new_download = %Download{
+      id: download.id,
+      src: download.src,
+      dest: download.dest,
+      from: download.from,
+      size: 0,
+      status: :initiate,
+      bytes_downloaded: 0,
+      exit_status: nil,
+      error_reason: nil,
+      start_time: nil,
+      end_time: nil,
+      resp: nil,
+      fd: nil
+    }
+
+    {:ok, new_download}
+  end
+
+  @impl GenServer
+  def terminate(reason, %Download{id: id, from: from} = download) do
+    # Inform parent genServer
+    Process.send(from, {:terminating, id, download}, [])
+
+    Logger.info(
+      "Terminate download-worker #{id}: reason=#{inspect(reason)} download=#{inspect(download)}"
+    )
+
+    download
+    |> Map.get(download, :fd)
+    |> File.close()
+
+    :normal
+  end
+
+  @impl GenServer
+  def handle_call(:status, _from, download), do: {:reply, download, download}
+
+  @impl GenServer
+  def handle_info(:kickoff, %Download{src: src, dest: dest} = download) do
+    {:ok, fd} = File.open(dest, [:write, :binary])
+
+    case HTTPoison.get(src, %{}, stream_to: self(), async: :once) do
+      {:ok, resp} ->
+        download = %Download{download | resp: resp, fd: fd}
+        {:noreply, download}
+
+      {:error, %HTTPoison.Error{reason: reason}} ->
+        failed_download = %Download{
+          download
+          | status: :error,
+            error_reason: reason,
+            exit_status: :error
+        }
+
+        {:stop, reason, failed_download}
+    end
+  end
+
+  @impl GenServer
+  def handle_info(%HTTPoison.AsyncStatus{code: code}, download) when code >= 400 do
+    message = "Failed with code: #{code}"
+
+    failed_download = %Download{
+      download
+      | status: :error,
+        error_reason: message,
+        exit_status: :error
+    }
+
+    {:stop, message, failed_download}
+  end
+
+  @impl GenServer
+  def handle_info(%HTTPoison.AsyncStatus{}, download) do
+    HTTPoison.stream_next(download.resp)
+    {:noreply, download}
+  end
+
+  @impl GenServer
+  def handle_info(%HTTPoison.Error{reason: reason}, download) do
+    message = inspect(reason)
+
+    failed_download = %Download{
+      download
+      | status: :error,
+        error_reason: message,
+        exit_status: :error
+    }
+
+    {:stop, message, failed_download}
+  end
+
+  @impl GenServer
+  def handle_info(%HTTPoison.AsyncHeaders{headers: headers}, download) do
+    size =
+      Enum.find(headers, fn
+        {"Content-Length", _length} -> true
+        _ -> false
+      end)
+      |> case do
+        {"Content-Length", length} -> length || 0
+        nil -> 0
+      end
+
+    HTTPoison.stream_next(download.resp)
+    download = %Download{download | size: size, status: :active, start_time: DateTime.utc_now()}
+    {:noreply, download}
+  end
+
+  @impl GenServer
+  def handle_info(%HTTPoison.AsyncChunk{chunk: chunk}, download) do
+    IO.binwrite(download.fd, chunk)
+    HTTPoison.stream_next(download.resp)
+    bytes_downloaded = download.bytes_downloaded + byte_size(chunk)
+    download = %Download{download | bytes_downloaded: bytes_downloaded}
+    {:noreply, download}
+  end
+
+  @impl GenServer
+  def handle_info(%HTTPoison.AsyncEnd{}, download) do
+    File.close(download.fd)
+
+    finished_download = %Download{
+      download
+      | status: :finish,
+        exit_status: :normal,
+        end_time: DateTime.utc_now()
+    }
+
+    {:stop, :finish, finished_download}
+  end
+end
+```
+
+```elixir
+defmodule DownloadsSupervisor do
+  use DynamicSupervisor
+  require Logger
+
+  def start_link(_) do
+    DynamicSupervisor.start_link(__MODULE__, :no_args, name: __MODULE__)
+  end
+
+  def init(:no_args) do
+    DynamicSupervisor.init(strategy: :one_for_one)
+  end
+
+  def add(args) do
+    {:ok, pid} = DynamicSupervisor.start_child(__MODULE__, {DownloadWorker, args})
+
+    pid
+  end
+
+  def remove(child_pid) do
+    DynamicSupervisor.terminate_child(__MODULE__, child_pid)
+  end
+end
+```
+
+```elixir
+defmodule DownloadManager do
+  @moduledoc """
+  GenServer which stores aggregates and stores state for all download worker processes
+  Exposes APIs to add, delete, list downloads.
+
+  Examples:
+
+  {:ok, id} = DownloadManager.add("https://file-examples-com.github.io/uploads/2017/04/file_example_MP4_1920_18MG.mp4")
+  DownloadManager.list()
+  DownloadManager.get(id)
+  DownloadManager.remove(id)
+  """
+  use GenServer
+
+  require Logger
+
+  @update_interval 1000
+  @base_download_path "/tmp/async_elixir_temp_downloads"
+
+  # Public Api
+  def start_link(_opts), do: GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
+
+  def add(src), do: GenServer.call(__MODULE__, {:add, src})
+
+  def remove(id), do: GenServer.call(__MODULE__, {:remove, id})
+
+  def get(id), do: GenServer.call(__MODULE__, {:get, id})
+
+  @spec list() :: list(Download.t())
+  def list(), do: GenServer.call(__MODULE__, :list)
+
+  def clear_all_downloads(), do: File.rm_rf!(@base_download_path)
+
+  # Callbacks
+
+  @impl GenServer
+  def init(_args) do
+    Process.send_after(self(), :fetch_all, @update_interval)
+    {:ok, %{}}
+  end
+
+  @impl GenServer
+  def handle_call({:get, id}, _from, state) do
+    case Map.get(state, id) do
+      nil ->
+        {
+          :reply,
+          {:error, :not_found},
+          state
+        }
+
+      download ->
+        {
+          :reply,
+          {:ok, download},
+          state
+        }
+    end
+  end
+
+  @impl GenServer
+  def handle_call({:add, src}, _from, state) do
+    id = UUID.uuid1()
+    File.mkdir_p!(@base_download_path)
+    download_destination = "#{@base_download_path}/#{id}"
+
+    download = %Download{
+      id: id,
+      src: src,
+      dest: download_destination,
+      from: self(),
+      name: guess_filename(src)
+    }
+
+    pid = DownloadsSupervisor.add(download)
+    download = %Download{download | pid: pid}
+    {:reply, {:ok, id}, Map.put(state, id, download)}
+  end
+
+  @impl GenServer
+  def handle_call({:remove, id}, _from, state) do
+    case Map.get(state, id) do
+      %Download{pid: pid, dest: dest} ->
+        DownloadsSupervisor.remove(pid)
+        res = File.rm(dest)
+        Logger.info("Remove left over file: #{inspect(res)}")
+
+        {:reply, {:ok, id}, Map.delete(state, id)}
+
+      _ ->
+        {:reply, {:error, :not_found}, state}
+    end
+  end
+
+  @impl GenServer
+  def handle_call(:list, _from, state) do
+    {:reply, Map.values(state), state}
+  end
+
+  @impl GenServer
+  def handle_info({:terminating, id, last_child_state}, state) do
+    {_old_value, state} =
+      Map.get_and_update(state, id, fn
+        current_value when is_nil(current_value) -> :pop
+        current_value -> {current_value, merge_with_old_state(current_value, last_child_state)}
+      end)
+
+    Logger.info("Recieved last state from child: #{id}, new_state: #{inspect(state)}")
+    {:noreply, state}
+  end
+
+  @impl GenServer
+  def handle_info(:fetch_all, state) do
+    new_state =
+      state
+      |> Enum.map(fn
+        {id, %Download{status: status} = download} when status in [:finish, :error, :cancel] ->
+          {id, download}
+
+        {id, %Download{pid: pid} = download} ->
+          {id, fetch_status(pid, download)}
+      end)
+      |> Enum.into(%{})
+
+    Process.send_after(self(), :fetch_all, @update_interval)
+    {:noreply, new_state}
+  end
+
+  # Private helpers
+
+  defp fetch_status(pid, download) do
+    if Process.alive?(pid) do
+      new_download_state = GenServer.call(pid, :status)
+      merge_with_old_state(download, new_download_state)
+    else
+      %Download{download | status: :error, error_reason: "Killed"}
+    end
+  end
+
+  defp merge_with_old_state(old_download, new_download) do
+    %Download{
+      old_download
+      | size: new_download.size,
+        status: new_download.status,
+        bytes_downloaded: new_download.bytes_downloaded,
+        start_time: new_download.start_time,
+        end_time: new_download.end_time,
+        error_reason: new_download.error_reason
+    }
+  end
+
+  defp guess_filename(url) do
+    path =
+      url
+      |> URI.parse()
+      |> Map.fetch!(:path)
+
+    if(is_nil(path), do: UUID.uuid1(), else: path |> Path.basename() |> String.trim())
+  end
+end
+```
+
+```elixir
+defmodule Runner do
+  # 0.5 seconds
+  @refresh_rate 500
+
+  def render_downloads_list do
+    Kino.animate(@refresh_rate, fn _ ->
+      downloads = DownloadManager.list()
+
+      unless downloads == [] do
+        data =
+          downloads
+          |> Enum.map(fn download ->
+            data =
+              [
+                download.id,
+                download.name,
+                download.status,
+                percentage_progresss(download),
+                progress(download),
+                get_speed(download),
+                download.src,
+                download.dest,
+                download.start_time,
+                download.end_time || "NA",
+                download.error_reason || "NA"
+              ]
+              |> Enum.join("|")
+
+            "|" <> data <> "|"
+          end)
+          |> Enum.join("\n")
+
+        headers = """
+        |ID|Name|Status|Percentage Completed|Progress|Speed|Source URL|Destination|Started At|Ended At|Error Reason|
+        |--|----|------|--------------------|--------|-----|----------|-----------|----------|--------|------------|
+        """
+
+        Kino.Markdown.new("#{headers}#{data}")
+      end
+    end)
+  end
+
+  defp percentage_progresss(download) do
+    if download.status != :initiate && to_int(download.size) != 0 do
+      percentage = download.bytes_downloaded / to_int(download.size) * 100
+      "#{trunc(percentage)}%"
+    else
+      "NA"
+    end
+  end
+
+  defp progress(download) do
+    if download.status != :initiate && to_int(download.size) != 0 do
+      "#{Sizeable.filesize(download.bytes_downloaded)} / #{Sizeable.filesize(download.size)}"
+    else
+      "NA"
+    end
+  end
+
+  defp get_speed(download) when download.status == :active,
+    do: "#{get_speed_in_bytes(download) |> Sizeable.filesize()}/sec"
+
+  defp get_speed(_download), do: "NA"
+
+  defp get_speed_in_bytes(%Download{bytes_downloaded: bytes_downloaded, start_time: start_time})
+       when is_nil(start_time) or bytes_downloaded == 0,
+       do: 0
+
+  defp get_speed_in_bytes(download) do
+    elapsed_time = DateTime.diff(DateTime.utc_now(), download.start_time)
+    if elapsed_time == 0, do: 0, else: download.bytes_downloaded / elapsed_time
+  end
+
+  defp to_int(num) when is_binary(num) do
+    case Integer.parse(num) do
+      {num, _} -> num
+      :error -> 0
+    end
+  end
+
+  defp to_int(num), do: num
+end
+```
+
+```elixir
+if Process.whereis(DownloadsSupervisor), do: DynamicSupervisor.stop(DownloadsSupervisor)
+if Process.whereis(DownloadManager), do: GenServer.stop(DownloadManager)
+DownloadManager.clear_all_downloads() |> IO.inspect()
+
+{:ok, download_sup_pid} = DownloadsSupervisor.start_link(:noop)
+{:ok, download_manager_pid} = DownloadManager.start_link(:noop)
+```
+
+```elixir
+Runner.render_downloads_list()
+```
+
+```elixir
+{:ok, first_id} = DownloadManager.add("https://speed.hetzner.de/100MB.bin")
+{:ok, second_id} = DownloadManager.add("https://speed.hetzner.de/1GB.bin")
+{:ok, third_id} = DownloadManager.add("https://speed.hetzner.de/10GB.bin")
+{:ok, fourth_id} = DownloadManager.add("https://speed.hetzner.de/bad_file.bin")
+```
+
+```elixir
+Kino.Process.render_sup_tree(download_sup_pid)
+```
+
+```elixir
+DownloadManager.remove(fourth_id)
+```
+
+```elixir
+pids_to_trace =
+  download_sup_pid |> Supervisor.which_children() |> Enum.map(fn {_name, pid, _, _} -> pid end)
+
+pids_to_trace = [download_manager_pid | pids_to_trace]
+
+# Trace and inspect messages being sent in between the processes
+Kino.Process.render_seq_trace(pids_to_trace, fn ->
+  {:ok, _first_id} = DownloadManager.add("https://speed.hetzner.de/100MB.bin")
+  # Sleep to enable catching all messages between the processes
+  :timer.sleep(1000)
+end)
+```
