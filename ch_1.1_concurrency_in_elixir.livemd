@@ -1,9 +1,5 @@
 # Concurrency in Elixir
 
-```elixir
-Mix.install([])
-```
-
 ## Concurrency vs Parallelism
 
 Concurrency and parallelism are often used interchangeably but are two distinct concepts. Concurrency refers to the execution of multiple tasks that overlap in time, with each task being interrupted and resumed intermittently by the CPU(context switching). This can create an illusion of tasks running simultaneously, but in reality, they are taking turns executing on a single time-sliced CPU.
