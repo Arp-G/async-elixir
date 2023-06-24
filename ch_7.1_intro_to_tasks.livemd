@@ -1,0 +1,26 @@
+# Introduction to Tasks
+
+## Introduction
+
+In the previous chapters, we explored various methods of starting processes, including `spawn/1` and `spawn_link/1`. Now, let's dive into the Task module, which provides a more convenient approach to spawning processes for performing tasks.
+
+The Task module offers a wide range of convenience functions to effectively manage launched tasks. Unlike plain processes started with `spawn/1`, tasks provide additional capabilities such as monitoring metadata and error logging.
+
+With the Task module, we gain access to a many functions tailored to common use cases. We can easily await the completion of spawned tasks, launch supervised tasks, and execute multiple tasks concurrently. The abstraction and convenience functions provided by the Task module make working with processes a breeze, eliminating the need to delve into low-level details.
+
+## Basics usage
+
+Let's explore some basic examples of launching tasks:
+
+```elixir
+Task.start(fn -> IO.puts("Hello from the first task!") end)
+
+# Same as Task.start/1, but accepts a module, function, and arguments instead.
+Task.start(IO, :puts, ["Hello from the second task!"])
+```
+
+As you can see, launching a task is very similar to spawning a process using `spawn/1`. In this case, the process spawned by `Task.start/1` is not linked to the caller process. It is primarily used for performing side effects where we don't need to wait for the result or handle failures.
+
+<!-- livebook:{"break_markdown":true} -->
+
+In the upcoming chapters, we will dive deeper into the capabilities of tasks. We will explore how to await task completion, supervise tasks, and uncover many more exciting features. Stay tuned!
