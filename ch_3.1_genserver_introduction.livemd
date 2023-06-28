@@ -8,6 +8,10 @@ One such behavior is the GenServer, which comes bundled with OTP. Other examples
 
 At its most basic level, **a GenServer is a single process that runs a loop and handles one message per iteration, passing along an updated state**. By using the GenServer behavior and implementing the necessary callbacks, we can easily implement a client-server relation.
 
+A GenServer process starts by initializing its state and then enters a waiting state, anticipating incoming messages. Upon receiving a message, the process handles it, updates its state, and returns to the waiting state (genserver loop).
+
+A process can only execute when it receives a message. After initialization, a process simply waits for messages, meaning that an **idle process doesn't consume any resources**.
+
 ## Genserver callbacks
 
 In order to create a genserver we must first use the genserver behaviour by adding the following line to our module `use Genserver`

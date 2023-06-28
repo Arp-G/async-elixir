@@ -30,6 +30,18 @@ Elixir leverages lightweight processes that are expertly managed by the VM. Thes
 
 This lightweight process model has given rise to several powerful applications, including the [Cowboy web server](https://github.com/ninenines/cowboy) which creates a process for every incoming web request to keep heavy work or errors within a single request from affecting others. Other examples include [Phoenix Channels](https://hexdocs.pm/phoenix/channels.html) and [Phoenix live view](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html) that employ an Erlang process per WebSocket connection.
 
+## Processes in Elixir
+
+In Elixir and Erlang, the term "processes" does not refer to operating system processes or threads. Instead, they are akin to [green threads](https://en.wikipedia.org/wiki/Green_thread#:~:text=In%20computer%20programming%2C%20a%20green,underlying%20operating%20system%20(OS).) or actors. These processes run concurrently on a single-core CPU and in parallel on multiple cores, managed and scheduled by the Erlang Virtual Machine.
+
+Surprisingly, each process in Elixir and Erlang requires only around 300 words of memory and takes microseconds to start, making them incredibly lightweight. In fact, within the Erlang Virtual Machine, every entity executing code operates within a process.
+
+For instance, in [Phoenix](https://www.phoenixframework.org/), when making a regular HTTP request using Phoenix controllers, the corresponding connection is allocated its own process. This process is swiftly terminated once the response is sent and the connection is closed. In [LiveView](https://github.com/phoenixframework/phoenix_live_view) we keep that process alive.
+
+Each process is capable of executing code and possesses a **first-in-first-out** mailbox to which other processes can send messages. Likewise, it can send messages to other processes. Processes in Elixir and Erlang are inherently **sequential**, meaning they handle one message at a time.
+
+Similar to an operating system scheduler, the Erlang VM has the ability to start, pause, or preempt work as needed. While waiting for a message, a process is completely ignored by the scheduler. As a result, **idle processes do not consume any system resources**.
+
 <!-- livebook:{"break_markdown":true} -->
 
 #### Scheduling in BEAM
@@ -65,3 +77,4 @@ System.schedulers_online()
 
 * https://medium.com/flatiron-labs/elixir-and-the-beam-how-concurrency-really-works-3cc151cddd61
 * https://blog.stenmans.org/theBeamBook/#CH-Scheduling
+* https://fly.io/phoenix-files/a-liveview-is-a-process/
