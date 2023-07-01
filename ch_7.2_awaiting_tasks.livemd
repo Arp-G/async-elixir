@@ -2,6 +2,7 @@
 
 ```elixir
 Mix.install([
+  {:httpoison, "~> 2.1"},
   {:kino, "~> 0.9.0"}
 ])
 ```
@@ -10,11 +11,7 @@ Mix.install([
 
 Till now we have seen examples were we spawn a process to do something concurrently however sometimes we might need the value returned by the process. In such situations it is important to wait for the process to complete and then fetch the result.
 
-<!-- livebook:{"break_markdown":true} -->
-
-So far, we have explored scenarios where we spawn processes to perform tasks concurrently. However, there are situations where we need to obtain the value returned by a process. In such cases, it becomes crucial to wait for the process to complete and retrieve the result.
-
-The Task module provides the `async` and `await` functions to handle this common use case. With `Task.async`, a new process is created, linked, and monitored by the caller. Once the task action finishes, a message containing the result is sent to the caller. The `Task.await/2` function is then used to read this message and obtain the result.
+The Task module provides the `async` and `await` functions to handle this common use case. With `Task.async/1`, a new process is created, **linked, and monitored** by the caller. Once the task action finishes, a message containing the result is sent to the caller. The `Task.await/2` function is then used to read this message and obtain the result.
 
 Here are some key points to note about `async` and `await`:
 
@@ -52,7 +49,7 @@ Task.await(my_task)
 ```
 
 Here notice how the spwed task process sends a message back to the caller in the format
-`{<task_reference>, <return value>}`. The `Task.await` call basically [awaits this message](https://github.com/elixir-lang/elixir/blob/9fd85b06dcb74217108cd0bdf4164b6cd7f9e667/lib/elixir/lib/task.ex#L827) in a recieve block somewhat like
+`{<task_reference>, <return value>}`. The `Task.await/1` call basically [awaits this message](https://github.com/elixir-lang/elixir/blob/9fd85b06dcb74217108cd0bdf4164b6cd7f9e667/lib/elixir/lib/task.ex#L827) in a recieve block somewhat like so
 
 <!-- livebook:{"force_markdown":true} -->
 
@@ -67,7 +64,7 @@ end
 
 <!-- livebook:{"break_markdown":true} -->
 
-The other message returned is `{:DOWN, ref, :process, pid, reason}` - since all tasks are also monitored, you will also receive the `:DOWN` message delivered by `Process.monitor/1`. If you receive the :DOWN message without a a reply, it means the task crashed.
+The other message returned is `{:DOWN, ref, :process, pid, reason}` - since all tasks are also monitored, you will also receive the `:DOWN` message delivered by `Process.monitor/1`. If you receive the :DOWN message without getting the reply message, it means the task crashed.
 
 <!-- livebook:{"break_markdown":true} -->
 
@@ -122,7 +119,7 @@ Enum.sum(results)
 Some important points to note about `Task.await_many/1` are...
 
 * If any of the task processes dies, the caller process will exit with the same reason as that task.
-* It returns a list of the results, in the same order as the tasks supplied in the tasks input argument.
+* It returns a list of the results, in the **same order** as the tasks supplied in the tasks input argument.
 * A timeout, in milliseconds or :infinity, can be given with a default value of 5000. If the timeout is exceeded, then the caller process will exit. Any task processes that are linked to the caller process (which is the case when a task is started with async) will also exit. Any task processes that are trapping exits or not linked to the caller process will continue to run.
 
 ## Task await timeouts
@@ -142,7 +139,7 @@ If we want to check if a task has completed or not and not risk the caller proce
 
 ## Yielding tasks
 
-Sometimes we only wish to check if a Task is completed within a given timeout, if not we want the caller process to continue. Unline `Task.await/1` were the caller process exits in cases of timeouts with `Task.yield/2` the caller process will continue to run if the Task has not yet completed within the timeout. Therefore `Task.yield/2` can be called multiple times on the same task.
+Sometimes we only wish to check if a Task is completed within a given timeout, if not we want the caller process to continue. Unlike `Task.await/1` were the caller process exits in cases of timeouts with `Task.yield/2` the caller process will continue to run if the Task has not yet completed within the timeout. Therefore `Task.yield/2` can be called multiple times on the same task.
 
 Just like await the yield function will also block the caller process until the task completes or the timeout is reached.
 
@@ -178,10 +175,7 @@ Similar to `Task.await_many/2` we also have `Task.yield_many/2`
 
 This function receives a list of tasks and waits for their replies in the given time interval. It returns a list of two-element tuples, with the task as the first element and the yielded result as the second. The tasks in the returned list will be in the same order as the tasks supplied in the tasks input argument.
 
-Similarly to yield/2, each task's result will be
-
-{:ok, term} if the task has successfully reported its result back in the given time interval
-{:exit, reason} if the task has died
+Similarly to yield/2, each task's result will be `{:ok, term}` if the task has successfully reported its result back in the given time interval or `{:exit, reason}` if the task has died
 nil if the task keeps running past the timeout
 
 ```elixir
@@ -208,13 +202,26 @@ for {:ok, value} <- results do
 end
 ```
 
-In the example above, we create tasks that sleep from 1 up to 10 seconds and return the number of seconds they slept for. If you execute the code all at once, you should see 1 up to 5 printed, as those were the tasks that have replied in the given time. All other tasks will have been shut down using the Task.shutdown/2 call.
+In the example above, we create tasks that sleep from 1 up to 10 seconds and return the number of seconds they slept for. If you execute the code all at once, you should see 1 up to 4 printed, as those were the tasks that have replied in the default timeout (5 seconds) of `Task.yield_many/1`. All other tasks will have been shut down using the `Task.shutdown/2` call.
 
-As a convenience, you can achieve a similar behaviour to above by specifying the :on_timeout option to be :kill_task (or :ignore). See Task.await_many/2 if you would rather exit the caller process on timeout.
+As a convenience, you can achieve a similar behaviour to above by specifying the `:on_timeout` option to be `:kill_task` (or `:ignore`).
+
+For example to kill all tasks which do not yield within 7 seconds we can write
+`Task.yield_many(tasks_list, timeout: 7000, on_timeout: :kill_task)` (this option is available from elixir 1.15.0+)
 
 ## Async Stream
 
-TODO
+Streams are a valuable feature in Elixir that allow for lazy emission of elements. Any enumerable that generates elements one by one during enumeration is considered a stream. Streams are particularly useful when dealing with large datasets that could consume excessive memory if loaded all at once. With streams, we can manage data lazily, processing elements as needed. To learn more about Stream module check out the documentation [here](https://hexdocs.pm/elixir/1.15.0/Stream.html).
+
+Now that we have a basic understanding of streams, let's explore the highly powerful `Task.async_stream/3` function. This function enables concurrent processing of each element in a enumerable, unlocking significant potential for parallel execution.
+
+Since `Task.async_stream/3` works on enumerables it can work on both Streams and Enums.
+
+Lets look at an example...
+
+```elixir
+HTTPoison.get("https://api.chucknorris.io/jokes/random")
+```
 
 ## Supervised Tasks
 
