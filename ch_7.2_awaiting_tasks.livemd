@@ -1,10 +1,7 @@
 # Awaiting Tasks
 
 ```elixir
-Mix.install([
-  {:httpoison, "~> 2.1"},
-  {:kino, "~> 0.9.0"}
-])
+Mix.install([])
 ```
 
 ## Introduction
@@ -209,20 +206,6 @@ As a convenience, you can achieve a similar behaviour to above by specifying the
 For example to kill all tasks which do not yield within 7 seconds we can write
 `Task.yield_many(tasks_list, timeout: 7000, on_timeout: :kill_task)` (this option is available from elixir 1.15.0+)
 
-## Async Stream
+## References
 
-Streams are a valuable feature in Elixir that allow for lazy emission of elements. Any enumerable that generates elements one by one during enumeration is considered a stream. Streams are particularly useful when dealing with large datasets that could consume excessive memory if loaded all at once. With streams, we can manage data lazily, processing elements as needed. To learn more about Stream module check out the documentation [here](https://hexdocs.pm/elixir/1.15.0/Stream.html).
-
-Now that we have a basic understanding of streams, let's explore the highly powerful `Task.async_stream/3` function. This function enables concurrent processing of each element in a enumerable, unlocking significant potential for parallel execution.
-
-Since `Task.async_stream/3` works on enumerables it can work on both Streams and Enums.
-
-Lets look at an example...
-
-```elixir
-HTTPoison.get("https://api.chucknorris.io/jokes/random")
-```
-
-## Supervised Tasks
-
-TODO
+* https://hexdocs.pm/elixir/1.12/Task.html#content
