@@ -21,6 +21,34 @@ Task.start(IO, :puts, ["Hello from the second task!"])
 
 As you can see, launching a task is very similar to spawning a process using `spawn/1`. In this case, the process spawned by `Task.start/1` is not linked to the caller process. It is primarily used for performing side effects where we don't need to wait for the result or handle failures.
 
+## The Task struct
+
+Under the hood, a task in Elixir is essentially a regular Elixir process. When we spawn a task using one of the functions provided by the Task module, we receive a `Task` struct in return. This struct contains additional information about the task, and it can be utilized with various functions from both the Task and Task.Supervisor modules (which we will explore in greater detail in the upcoming chapters).
+
+Now, let's take a closer look at the information encapsulated within the Task struct. To do this, we will start a task using the `Task.async/1` function and analyze the resulting struct.
+
+```elixir
+Task.async(fn -> :empty_task end)
+```
+
+We get back a structure like so
+
+```
+%Task{
+  mfa: {module, function, arrity},
+  owner: owner_pid,
+  pid: task_process_pid,
+  ref: #Reference<task_reference>
+}
+```
+
+* `:mfa` - a three-element tuple containing the module, function name, and arity invoked to start the task in async/1 and async/3
+* `:owner` - the PID of the process that started the task
+* `:pid` - the PID of the task process; nil if there is no process specifically assigned for the task
+* `:ref` - an opaque term used as the task monitor reference
+
+In the case of the `ref` field in the Task struct, it represents a monitor reference. When a task is spawned, the caller process monitors the task process using this reference. This monitoring enables the caller process to receive a `{:DOWN, <reference>, :process, <pid>, <exit_reason>}` message when the task exits. The monitor reference is particularly useful when awaiting tasks to [receive exit messages in case of crashes](https://github.com/elixir-lang/elixir/blob/7f7a8bca99fa306a41a985df0018ba642e577d4d/lib/elixir/lib/task.ex#L841).
+
 <!-- livebook:{"break_markdown":true} -->
 
 In the upcoming chapters, we will dive deeper into the capabilities of tasks. We will explore how to await task completion, supervise tasks, and uncover many more exciting features. Stay tuned!

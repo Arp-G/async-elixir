@@ -45,17 +45,25 @@ IO.inspect(my_task)
 Task.await(my_task)
 ```
 
-Here notice how the spwed task process sends a message back to the caller in the format
-`{<task_reference>, <return value>}`. The `Task.await/1` call basically [awaits this message](https://github.com/elixir-lang/elixir/blob/9fd85b06dcb74217108cd0bdf4164b6cd7f9e667/lib/elixir/lib/task.ex#L827) in a recieve block somewhat like so
+Here notice how the spawed task process sends a message back to the caller in the format
+`{<task_reference>, <return value>}`. The `Task.await/1` call basically [awaits this message](https://github.com/elixir-lang/elixir/blob/9fd85b06dcb74217108cd0bdf4164b6cd7f9e667/lib/elixir/lib/task.ex#L827) in a recieve block like so...
 
 <!-- livebook:{"force_markdown":true} -->
 
 ```elixir
 receive do
+  # The reply message from the task
   {^ref, reply} ->
+    # Stop monitoring the task since th task has sent a reply so must have completed successfully so we no longer monitor the process for crashes
+    demonitor(ref)
     reply
 
-  # more code...
+  # This is the message received from the task monitor, if this happens it means we received the :DOWN message without getting the reply message, which means the task crashed
+  {:DOWN, ^ref, _, proc, reason} ->
+    # Exit the linked caller process that is awaiting since the task process crashed
+    exit({reason(reason, proc), {__MODULE__, :await, [task, timeout]}})
+
+    # more code
 end
 ```
 
