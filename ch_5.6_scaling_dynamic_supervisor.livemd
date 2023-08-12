@@ -6,6 +6,23 @@ Mix.install([
 ])
 ```
 
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_5.5_partition_supervisor.ex.livemd">Partition supervisor</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_6.0_project_building_a_download_manager.livemd">Project: Building a download manager</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>
+
 ## The scalability problem with DynamicSupervisors
 
 In previous chapters, we learned about the DynamicSupervisor, which is effective for dynamically spawning and supervising child processes. However, in certain scenarios, the DynamicSupervisor can become a bottleneck.
@@ -164,3 +181,20 @@ end
 
 * https://hexdocs.pm/elixir/1.15.0-rc.0/PartitionSupervisor.html#content
 * https://blog.appsignal.com/2022/09/20/fix-process-bottlenecks-with-elixir-1-14s-partition-supervisor.html
+
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_5.5_partition_supervisor.ex.livemd">Partition supervisor</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_6.0_project_building_a_download_manager.livemd">Project: Building a download manager</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>

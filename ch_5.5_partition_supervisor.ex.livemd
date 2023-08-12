@@ -6,6 +6,23 @@ Mix.install([
 ])
 ```
 
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_5.4_introduction_to_dynamic_supervisor.livemd">Introduction to dynamic supervisor</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_5.6_scaling_dynamic_supervisor.livemd">Scaling dynamic supervisor</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>
+
 ## Introduction
 
 A PartitionSupervisor functions similarly to a regular supervisor, but with the added capability of creating partitions.
@@ -212,3 +229,20 @@ GenServer.whereis({:via, PartitionSupervisor, {EchoServerPartitionSupervisor, "1
 ### Implementation detail
 
 The PartitionSupervisor uses either an ETS table or a `Registry` to manage all of the partitions. Under the hood, the PartitionSupervisor generates a child spec for each partition and then acts as a regular supervisor. The ID of each child spec is the partition number.
+
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_5.4_introduction_to_dynamic_supervisor.livemd">Introduction to dynamic supervisor</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_5.6_scaling_dynamic_supervisor.livemd">Scaling dynamic supervisor</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>

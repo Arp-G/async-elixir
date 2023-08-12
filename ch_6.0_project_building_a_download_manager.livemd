@@ -9,6 +9,23 @@ Mix.install([
 ])
 ```
 
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_5.6_scaling_dynamic_supervisor.livemd">Scaling dynamic supervisor</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_7.1_intro_to_tasks.livemd">Introduction to tasks</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>
+
 ## Introduction
 
 In this chapter, we will put into practice the concepts we have learned in the previous chapters by building a project. Our project will be a simple download manager that has the capability to download multiple files simultaneously and provide status updates for each download. A key requirement is that the failure of one download should not impact the progress or completion of other ongoing downloads.
@@ -159,7 +176,7 @@ defmodule DownloadWorker do
     }
 
     # Return the download struct as the GenServer state
-    # Also return {:continue, :kickoff} to immediately execute the handle_continue/2 
+    # Also return {:continue, :kickoff} to immediately execute the handle_continue/2
     # callback to kickoff the download
     {:ok, new_download, {:continue, :kickoff}}
   end
@@ -175,7 +192,7 @@ defmodule DownloadWorker do
         download = %Download{download | resp: resp, fd: fd}
         {:noreply, download}
 
-      # In case of errors update the download struct and return 
+      # In case of errors update the download struct and return
       # {:stop, reason, state} to stop the GenServer process
       {:error, %HTTPoison.Error{reason: reason}} ->
         failed_download = %Download{
@@ -292,7 +309,7 @@ defmodule DownloadWorker do
         end_time: DateTime.utc_now()
     }
 
-    # Since the download is finished we are returning {:stop, .., ..} 
+    # Since the download is finished we are returning {:stop, .., ..}
     # which will invoke the `terminate/2` callback
     {:stop, :finish, finished_download}
   end
@@ -444,7 +461,7 @@ defmodule DownloadManager do
       id: id,
       src: src,
       dest: download_destination,
-      # This `from` parameter allows the download worker to send a message back to the 
+      # This `from` parameter allows the download worker to send a message back to the
       # Download manager when the download finishes or in case of failures
       from: self(),
       name: guess_filename(src)
@@ -498,7 +515,7 @@ defmodule DownloadManager do
   end
 
   # Every 1 second (1000ms) we will query each of the active download worker
-  # process to refresh the state of the running downloads 
+  # process to refresh the state of the running downloads
   @impl GenServer
   def handle_info(:fetch_all, state) do
     new_state =
@@ -724,3 +741,20 @@ Throughout this process, we applied various concepts that we have learned in pre
 In summary, we utilized **GenServer** to manage the state of downloads, **DynamicSupervisor** to dynamically spawn and terminate download worker processes, **trapping exits** to handle failures gracefully, **message passing** between processes to communicate and coordinate activities, and finally, we learned how to **write and organize code that utilizes multiple processes** in Elixir.
 
 Well done! 🥳
+
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_5.6_scaling_dynamic_supervisor.livemd">Scaling dynamic supervisor</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_7.1_intro_to_tasks.livemd">Introduction to tasks</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>

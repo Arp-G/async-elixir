@@ -1,5 +1,22 @@
 # Process Basics
 
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_2.1_process_internals.livemd">Process internals</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_2.3_process_linking.livemd">Process linking and trapping exits</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>
+
 ## Process introspection
 
 To check processes we have in a running system: `:shell_default.i`.
@@ -133,3 +150,20 @@ IEx.Helpers.flush()
 
 Process.info(self_pid, :messages) |> IO.inspect(label: "Messages in mailbox after flush")
 ```
+
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_2.1_process_internals.livemd">Process internals</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_2.3_process_linking.livemd">Process linking and trapping exits</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>

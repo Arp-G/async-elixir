@@ -1,5 +1,22 @@
 # Other GenServer functions
 
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_3.3_genserver_examples.livemd">GenServer Examples</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_4.0_the_registry_module.livemd">The registry module</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>
+
 ## GenServer.reply/2
 
 In the previous chapters, we learned that a GenServer is a single process that processes messages from its mailbox one at a time. When using `GenServer.call/3`, the calling process waits until the GenServer sends a reply.
@@ -29,7 +46,7 @@ defmodule FoodOrderingServer do
   end
 
   def place_order(user, item) do
-    # We specify a timeout of 10 seconds to avoid timeout errors, 
+    # We specify a timeout of 10 seconds to avoid timeout errors,
     # since placing an order takes a lot of time
     GenServer.call(__MODULE__, {:place_order, user, item}, 10000)
   end
@@ -123,3 +140,20 @@ It's important to note that `GenServer.reply/`2 can be invoked from any process,
 <!-- livebook:{"break_markdown":true} -->
 
 There are 2 other functions `GenServer.abcast/3` and `GenServer.multi_call/4` which allows us to cast and call multiple GenServers at a time and can be usefull in a distributed environment. We will explore these functions at later chapters.
+
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_3.3_genserver_examples.livemd">GenServer Examples</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_4.0_the_registry_module.livemd">The registry module</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>

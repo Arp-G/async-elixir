@@ -1,5 +1,22 @@
 # Buliding a GenServer
 
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_3.1_genserver_introduction.livemd">GenServer Introduction</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_3.3_genserver_examples.livemd">GenServer Examples</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>
+
 ## Building a GenServer from scratch
 
 ```elixir
@@ -106,3 +123,20 @@ MyGenServer.call(stack_server_pid, :pop) |> IO.inspect(label: "POP")
 MyGenServer.call(stack_server_pid, :get_stack) |> IO.inspect(label: "STACK")
 send(stack_server_pid, :stats)
 ```
+
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_3.1_genserver_introduction.livemd">GenServer Introduction</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_3.3_genserver_examples.livemd">GenServer Examples</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>

@@ -1,5 +1,22 @@
 # Process Linking & Trapping Exists
 
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_2.2_process_basics.livemd">Process basics</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_2.4_process_monitoring_and_hibernation.livemd">Process monitoring and hibernation</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>
+
 ## Process Linking
 
 In Elixir, when we create a process, we have the option to link it to its parent process. This means that if the child process encounters an error and fails, the parent process will be notified.
@@ -154,3 +171,20 @@ IO.inspect(Process.alive?(p), label: "After :kill exit signal")
 ## Resources
 
 * https://eddwardo.github.io/posts/links-in-elixir/
+
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_2.2_process_basics.livemd">Process basics</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_2.4_process_monitoring_and_hibernation.livemd">Process monitoring and hibernation</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>

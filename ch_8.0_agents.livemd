@@ -1,5 +1,18 @@
 # Agents
 
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_7.4_supervised_tasks.livemd">Supervised tasks</a>
+</div>
+</div>
+
 ## Introduction
 
 When it comes to storing state in Elixir, we have several options at our disposal. We can utilize the process dictionary for local access, employ GenServers, utilize [ETS tables](https://elixirschool.com/en/lessons/storage/ets), and more. However, one straightforward and convenient approach is to use Agents. Agents provide a simple abstraction for storing state in a process and offer a straightforward API for accessing and updating the stored state. Internally, Agents are implemented as GenServer processes.
@@ -130,3 +143,16 @@ use Agent, restart: :transient, shutdown: 10_000
 ```
 
 In the above code, the agent child specification is configured to have a restart strategy of `:transient`, meaning that the child process will only be restarted if it terminates abnormally. Additionally, the shutdown strategy is set to allow a grace period of 10,000 milliseconds for the child to shut down before forcefully terminating it.
+
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_7.4_supervised_tasks.livemd">Supervised tasks</a>
+</div>
+</div>

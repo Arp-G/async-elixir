@@ -1,5 +1,22 @@
 # GenServer examples
 
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_3.2_building_a_genserver.livemd">Building a GenServer</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_3.4_other_genserver_functions.livemd">Other GenServer functions</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>
+
 ## Password Manager
 
 Our objective is to create a straightforward password manager GenServer that can save user's passwords in its state.
@@ -229,3 +246,20 @@ This works fine for simple use cases however, if you require more advanced funct
 
 * https://hexdocs.pm/elixir/1.14.4/GenServer.html#reply/2
 * https://medium.com/blackode/2-unique-use-cases-of-genserver-reply-deep-insights-elixir-expert-31e7abbd42d1
+
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_3.2_building_a_genserver.livemd">Building a GenServer</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_3.4_other_genserver_functions.livemd">Other GenServer functions</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>

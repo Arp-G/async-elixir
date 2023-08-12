@@ -6,6 +6,23 @@ Mix.install([
 ])
 ```
 
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_5.3_restart_strategies.livemd">Restart strategies</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_5.5_partition_supervisor.ex.livemd">Partition supervisor</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>
+
 ## The Dynamic Supervisor
 
 In the previous chapter, we learned about the Supervisor behavior, which enables us to supervise processes and restart them in case of failures, ensuring fault tolerance. However, the Supervisor behavior requires us to specify all the child processes it will supervise in advance as child specifications. In other words, the Supervisor module was primarily designed to handle static children.
@@ -49,7 +66,7 @@ Lets look at some examples...
 ```elixir
 children = [{DynamicSupervisor, name: MyTestDynamicSupervisor}]
 
-# Th only possible strategy with DynamicSupervisor is :one_for_one 
+# Th only possible strategy with DynamicSupervisor is :one_for_one
 {:ok, supervisor_pid} = Supervisor.start_link(children, strategy: :one_for_one)
 ```
 
@@ -131,7 +148,7 @@ Two new options that are available with DynamicSupervisors are
 To understand this better lets look at an example:
 
 ```elixir
-# A simple GenServer module which we would start under our supervisor 
+# A simple GenServer module which we would start under our supervisor
 defmodule TestServerV2 do
   use GenServer
 
@@ -170,7 +187,7 @@ defmodule MyTestDynamicSupervisorV2 do
   def start_child(name, arg) do
     child_spec = %{id: TestServerV2, start: {TestServerV2, :start_link, [name, arg]}}
 
-    # This will start an child process of the TestServerV2 by calling 
+    # This will start an child process of the TestServerV2 by calling
     # TestServerV2.start_link(init_arg, name, arg)
     DynamicSupervisor.start_child(__MODULE__, child_spec)
   end
@@ -239,3 +256,20 @@ In future chapters, we will delve into the topic of scaling a DynamicSupervisor 
 
 * https://hexdocs.pm/elixir/DynamicSupervisor.html
 * https://elixirforum.com/t/different-between-supervisor-start-child-and-dynamicsupervisor-start-child/14585/3
+
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_5.3_restart_strategies.livemd">Restart strategies</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_5.5_partition_supervisor.ex.livemd">Partition supervisor</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>

@@ -1,5 +1,22 @@
 # The Registry module
 
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_3.4_other_genserver_functions.livemd">Other GenServe functions</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_5.1_supervisors_introduction.livemd">Supervisors introduction</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>
+
 ## What is Registry?
 
 From the official documentation
@@ -30,7 +47,7 @@ First we start the Registry process
 
 ```elixir
 # We start a Registry process and name it "Registry.ProcessStore"
-# Notice we use `keys: :unique` option which means every key in the Registry 
+# Notice we use `keys: :unique` option which means every key in the Registry
 # will point to a single process
 {:ok, _} = Registry.start_link(keys: :unique, name: Registry.ProcessStore)
 ```
@@ -60,7 +77,7 @@ end
 Now that we have a simple GenServer lets try to start 2 instances of this GenServer and name each of them using the Registry.
 
 ```elixir
-# Start the Stack GenServer and register it under the "Registry.ProcessStore" 
+# Start the Stack GenServer and register it under the "Registry.ProcessStore"
 # with a key named "stack_server_1"
 GenServer.start_link(
   Stack,
@@ -82,7 +99,7 @@ When we register a process under a Registry, we have the option to store an asso
 Now lets call our Stack GenServer using its Registered name, we can use the `lookup/2` function that returns a list like `[{pid(), value()}]`. For Regtries that allow duplicate entries a lookup can return multiple entries in this list.
 
 ```elixir
-# Since we use an unique Registry, its guaranteed we will only get atmost 
+# Since we use an unique Registry, its guaranteed we will only get atmost
 # one process under the name "stack_server"
 [{stack_server_one_pid, nil}] = Registry.lookup(Registry.ProcessStore, "stack_server_1")
 
@@ -238,3 +255,20 @@ Other functions like `count_match/4`, `select/2`, etc in the Registry module als
 
 * The official Registry documentition: https://hexdocs.pm/elixir/1.14.4/Registry.html#content
 * Guards in elixir: https://hexdocs.pm/elixir/1.14/patterns-and-guards.html#guards
+
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_3.4_other_genserver_functions.livemd">Other GenServe functions</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_5.1_supervisors_introduction.livemd">Supervisors introduction</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>

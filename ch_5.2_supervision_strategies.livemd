@@ -6,6 +6,23 @@ Mix.install([
 ])
 ```
 
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_5.1_supervisors_introduction.livemd">Supervisors introduction</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_5.3_restart_strategies.livemd">Restart strategies</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>
+
 ## Supervision strategies
 
 When starting a supervisor, we have the ability to specify a supervision strategy. This strategy determines the actions taken by the supervisor when one of its child processes crashes.
@@ -141,7 +158,7 @@ Let's proceed with restarting the `CrashDummySupervisor` using the `:one_for_all
 ```elixir
 # Stop the existing supervisor process
 # We used the module name as the Supervisor process name so we can use the module name to stop
-# the supervisor process. 
+# the supervisor process.
 # This will also terminate the supervision tree and all process running under our supervisor
 Supervisor.stop(CrashDummySupervisor)
 
@@ -227,3 +244,20 @@ Kino.Process.render_sup_tree(supervisor_pid)
 <!-- livebook:{"break_markdown":true} -->
 
 * The images for the different restart stragies are taken from the [erlang documentation](https://www.erlang.org/doc/design_principles/sup_princ.html#restart-strategy)
+
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_5.1_supervisors_introduction.livemd">Supervisors introduction</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_5.3_restart_strategies.livemd">Restart strategies</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>

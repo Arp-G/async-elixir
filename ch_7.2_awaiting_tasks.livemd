@@ -4,6 +4,23 @@
 Mix.install([])
 ```
 
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_7.1_intro_to_tasks.livemd">Introduction to tasks</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_7.3_task_async_stream.livemd">Task async stream</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>
+
 ## Introduction
 
 Till now we have seen examples were we spawn a process to do something concurrently however sometimes we might need the value returned by the process. In such situations it is important to wait for the process to complete and then fetch the result.
@@ -217,3 +234,20 @@ For example to kill all tasks which do not yield within 7 seconds we can write
 ## References
 
 * https://hexdocs.pm/elixir/1.12/Task.html#content
+
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_7.1_intro_to_tasks.livemd">Introduction to tasks</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_7.3_task_async_stream.livemd">Task async stream</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>

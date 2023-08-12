@@ -1,0 +1,99 @@
+# Async Elixir
+
+## Overview
+
+#### Welcome to Async Elixir
+
+Welcome to the **Async Elixir** course, a comprehensive exploration of Elixir's advanced concurrency features. This course is tailored for individuals with a foundational understanding of Elixir programming and a desire to elevate their expertise to the next level.
+
+#### Course Overview
+
+This course is your gateway to becoming proficient in Elixir's asynchronous capabilities. Whether you're an experienced developer expanding your skill set or a curious learner fascinated by concurrent programming, you'll gain a deep understanding of Elixir's powerful asynchronous features.
+
+By the conclusion of this course, you will have developed a robust understanding of processes, OTP patterns, and the Elixir standard library's utilization for effective process management. You'll be well-equipped to apply these concepts confidently in real-world situations.
+
+#### Key Topics Covered
+
+* **In-Depth Process and Concurrency:** Explore the intricate workings of Elixir processes and the art of achieving concurrency.
+
+* **Essential Process Management Concepts:** Learn vital concepts such as process linking, monitoring and more.
+
+* **Abstractions for Resilience and Control:** Navigate essential abstractions like GenServers, Supervisors, and core Elixir modules such as Task, Registry, and Agents.
+
+* **Applied Learning with a Project:** Put your knowledge into practice through a hands-on project, solidifying your grasp of asynchronous programming and process management.
+
+#### Course Focus
+
+* **Prerequisite Elixir Knowledge:** This course assumes a foundational familiarity with Elixir's syntax and concepts. It DOES NOT teach Elixir basics but instead focuses on the asynchronous capabilities of Elixir.
+
+* **Core Concepts, Not Libraries:** Our emphasis remains on core concepts. The course doesn't cover libraries like Phoenix or Phoenix LiveView. Instead, it equips you with a strong foundation to comprehend such libraries more effectively.
+
+### Prerequisites
+
+Before diving into the course, make sure you have the following:
+
+* Installed [Elixir](https://elixir-lang.org/install.html)
+* Installed [Livebook](https://livebook.dev/)
+* A basic understanding of Elixir syntax and the ability to write code in Elixir. If you need a refresher, you can review Elixir basics [here](https://elixir-lang.org/getting-started/introduction.html).
+
+[Livebook](https://livebook.dev/) is an excellent tool for learning Elixir and experimenting with its concepts. Learn more about Livebook [here](https://github.com/livebook-dev/livebook).
+
+#### About me
+
+I am a seasoned full-stack software engineer with four years of focused experience in Elixir programming. Over this period, I have actively engaged in various Elixir projects, extensively delved into Elixir literature, including books and blogs, and honed my skills in this powerful language. My fascination with Elixir's process-oriented architecture has inspired me to condense my insights into this comprehensive course.
+
+## Table of Contents
+
+#### Part 1: Concurrency and Processes
+
+* 🌀 [Chapter 1.1: Concurrency in Elixir](ch_1.1_concurrency_in_elixir.livemd)
+* 🧠 [Chapter 1.2: Immutability and Memory Management](ch_1.2_immutability_and_memory_management.livemd)
+
+#### Part 2: Processes
+
+* 🔄 [Chapter 2.1: Process Internals](ch_2.1_process_internals.livemd)
+* 🚀 [Chapter 2.2: Process Basics](ch_2.2_process_basics.livemd)
+* 🔗 [Chapter 2.3: Process Linking](ch_2.3_process_linking.livemd)
+* 💡 [Chapter 2.4: Process Monitoring and Hibernation](ch_2.4_process_monitoring_and_hibernation.livemd)
+* 🛌 [Chapter 2.5: Group Leaders and Process Naming](ch_2.5_group_leaders_and_process_naming.livemd)
+
+#### Part 3: GenServer
+
+* 🧪 [Chapter 3.1: GenServer Introduction](ch_3.1_genserver_introduction.livemd)
+* 🏗️ [Chapter 3.2: Building a GenServer](ch_3.2_building_a_genserver.livemd)
+* 🌐 [Chapter 3.3: GenServer Examples](ch_3.3_genserver_examples.livemd)
+* 🔧 [Chapter 3.4: Other GenServer Functions](ch_3.4_other_genserver_functions.livemd)
+
+#### Part 4: Registry Module
+
+* 📚 [Chapter 4: The Registry Module](ch_4.0_the_registry_module.livemd)
+
+#### Part 5: Supervision
+
+* 👥 [Chapter 5.1: Supervisors Introduction](ch_5.1_supervisors_introduction.livemd)
+* 🔄 [Chapter 5.2: Supervision Strategies](ch_5.2_supervision_strategies.livemd)
+* 🔄 [Chapter 5.3: Restart Strategies](ch_5.3_restart_strategies.livemd)
+* 🚀 [Chapter 5.4: Introduction to Dynamic Supervisor](ch_5.4_introduction_to_dynamic_supervisor.livemd)
+* 🗄️ [Chapter 5.5: Partition Supervisor Example](ch_5.5_partition_supervisor.ex.livemd)
+* ⚖️ [Chapter 5.6: Scaling with Dynamic Supervisor](ch_5.6_scaling_dynamic_supervisor.livemd)
+
+#### Part 6: Project: Building a Download Manager
+
+* 🛠️ [Chapter 6: Building a Download Manager](ch_6.0_project_building_a_download_manager.livemd)
+
+#### Part 7: Tasks
+
+* ⚙️ [Chapter 7.1: Introduction to Tasks](ch_7.1_intro_to_tasks.livemd)
+* 🔄 [Chapter 7.2: Awaiting Tasks](ch_7.2_awaiting_tasks.livemd)
+* 🔀 [Chapter 7.3: Task Async Stream](ch_7.3_task_async_stream.livemd)
+* 🛡️ [Chapter 7.4: Supervised Tasks](ch_7.4_supervised_tasks.livemd)
+
+#### Part 8: Agents
+
+* 🤖 [Chapter 8: Agents](ch_8.0_agents.livemd)
+
+---
+
+<!-- livebook:{"break_markdown":true} -->
+
+So without further ado, let's [get started](ch_1.1_concurrency_in_elixir.livemd)... 🚀

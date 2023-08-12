@@ -1,5 +1,22 @@
 # Immutability and memory management
 
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_1.1_concurrency_in_elixir.livemd">Concurrency in elixir</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_2.1_process_internals.livemd">Process internals</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>
+
 ## Immutability in elixir
 
 In Elixir, variables function as labels that refer to specific values. These values are immutable, meaning they cannot be changed. However, the label or variable can be reassigned to a different value. This provides the flexibility to bind the same value to multiple labels or variables.
@@ -113,3 +130,20 @@ In Erlang, the garbage collector for the shared heap uses a reference counting a
 * https://elixirforum.com/t/how-would-you-explain-elixir-immutability/47323/11
 
 * https://hamidreza-s.github.io/erlang%20garbage%20collection%20memory%20layout%20soft%20realtime/2015/08/24/erlang-garbage-collection-details-and-why-it-matters.html
+
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_1.1_concurrency_in_elixir.livemd">Concurrency in elixir</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_2.1_process_internals.livemd">Process internals</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>

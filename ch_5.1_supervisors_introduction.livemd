@@ -1,5 +1,22 @@
 # Introduction to Supervisors
 
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_4.0_the_registry_module.livemd">The registry module</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_5.2_supervision_strategies.livemd">Supervision strategies</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>
+
 ## What is a Supervisor?
 
 In our previous lesson on OTP, we explored the Genserver behavior. However, there's another critical behavior in OTP that deserves our attention: the **supervisor**.
@@ -170,3 +187,20 @@ children = [
 
 * https://hexdocs.pm/elixir/1.14.4/Supervisor.html
 * https://elixir-lang.org/getting-started/mix-otp/supervisor-and-application.html
+
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_4.0_the_registry_module.livemd">The registry module</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_5.2_supervision_strategies.livemd">Supervision strategies</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>

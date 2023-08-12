@@ -1,5 +1,18 @@
 # Concurrency in Elixir
 
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_1.2_immutability_and_memory_management.livemd">Immutability and memory management</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>
+
 ## Concurrency vs Parallelism
 
 Concurrency and parallelism are often used interchangeably but are two distinct concepts. Concurrency refers to the execution of multiple tasks that overlap in time, with each task being interrupted and resumed intermittently by the CPU(context switching). This can create an illusion of tasks running simultaneously, but in reality, they are taking turns executing on a single time-sliced CPU.
@@ -78,3 +91,16 @@ System.schedulers_online()
 * https://medium.com/flatiron-labs/elixir-and-the-beam-how-concurrency-really-works-3cc151cddd61
 * https://blog.stenmans.org/theBeamBook/#CH-Scheduling
 * https://fly.io/phoenix-files/a-liveview-is-a-process/
+
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_1.2_immutability_and_memory_management.livemd">Immutability and memory management</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>

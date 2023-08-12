@@ -4,6 +4,23 @@
 Mix.install([{:httpoison, "~> 2.1"}])
 ```
 
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_7.3_task_async_stream.livemd">Task async stream</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_8.0_agents.livemd">Agents</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>
+
 ## Supervising tasks
 
 In the previous chapters, we have learned how to start tasks and await their completion. These tasks are typically linked to the caller process and are not supervised.
@@ -265,3 +282,20 @@ Happy tasking! ✨🚀
 
 * https://hexdocs.pm/elixir/1.15.2/Task.Supervisor.html
 * https://groups.google.com/g/elixir-lang-talk/c/gSK36qc7EpE?pli=1
+
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_7.3_task_async_stream.livemd">Task async stream</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_8.0_agents.livemd">Agents</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>

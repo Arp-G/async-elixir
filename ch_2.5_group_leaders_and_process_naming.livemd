@@ -1,5 +1,22 @@
 # Group leaders and naming processes
 
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_2.4_process_monitoring_and_hibernation.livemd">Process monitoring and hibernation</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_3.1_genserver_introduction.livemd">GenServer introduction</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>
+
 ## Group Leader
 
 In Erlang, every process belongs to a process group, and each group has a group leader. The group leader is responsible for handling I/O for the processes in its group. When a process is spawned, it inherits the same group leader as its parent process. At system start-up, the init process is both its own group leader and the group leader of all processes.
@@ -10,10 +27,10 @@ The main responsibility of the group leader is to collect I/O output from all pr
 
 When a file is opened using `File.open/2`, it returns a tuple like `{:ok, io_device}`, where `io_device` is the PID of the process that handles the file. This process monitors the process that opened the file (the owner process), and if the owner process terminates, the file is closed, and the process itself terminates too.
 
-When you call `IO.write(pid, binary)`, the IO module sends a message to the process identified by pid with the desired operation, such as :put_chars. 
+When you call `IO.write(pid, binary)`, the IO module sends a message to the process identified by pid with the desired operation, such as :put_chars.
 The message has the following structure: `{:io_request, <pid>, <reference>, {:put_chars, :unicode, "hello"}}`.
 
-When you write to :stdio, you are actually sending a message to the group leader, which writes to the standard-output file descriptor. 
+When you write to :stdio, you are actually sending a message to the group leader, which writes to the standard-output file descriptor.
 Therefore, these three code snippets are equivalent:
 
 ```
@@ -24,7 +41,7 @@ IO.puts Process.group_leader, "hello"
 
 To understand this better let see some examples
 
-Suppose we have two Erlang nodes named "node1" and "node2". 
+Suppose we have two Erlang nodes named "node1" and "node2".
 You can create two `iex` shells for this like
 
 ```
@@ -42,7 +59,7 @@ Node.spawn_link(:node2@localhost, fn ->
 end)
 ```
 
-The output of the IO.puts operation will be sent to the group leader, which in this case is node1. 
+The output of the IO.puts operation will be sent to the group leader, which in this case is node1.
 Therefore, the output will be printed on node1's standard output stream, even though the process that performed the operation is running on node2.
 
 On the other hand, if we specify the device PID as the `:init` process on node2, the output will be seen on node2's standard output stream:
@@ -58,7 +75,7 @@ Node.spawn_link(:node2@localhost, fn ->
 end)
 ```
 
-Finally, we can also set the group leader of a process explicitly by calling `Process.group_leader/2`. 
+Finally, we can also set the group leader of a process explicitly by calling `Process.group_leader/2`.
 In the following example, we set the group leader of the process running on node2 to node2's `:init` process:
 
 ```
@@ -72,7 +89,7 @@ Node.spawn_link(:node2@localhost, fn ->
 end)
 ```
 
-In this case, the output of the `IO.puts` operation will be sent to node2's `:init` process, which is the new group leader of the process. 
+In this case, the output of the `IO.puts` operation will be sent to node2's `:init` process, which is the new group leader of the process.
 Therefore, the output will be printed on node2's standard output stream.
 
 ## Process naming
@@ -95,3 +112,20 @@ Process.registered() |> IO.inspect()
 * https://stackoverflow.com/questions/36318766/what-is-a-group-leader
 * https://rokobasilisk.gitbooks.io/elixir-getting-started/content/io_and_the_file_system/processes_and_group_leaders.html
 * https://elixirschool.com/en/lessons/advanced/otp_distribution#a-note-on-io-and-nodes-2
+
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_2.4_process_monitoring_and_hibernation.livemd">Process monitoring and hibernation</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_3.1_genserver_introduction.livemd">GenServer introduction</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>

@@ -1,5 +1,22 @@
 # Supervisor restart strategies
 
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_5.2_supervision_strategies.livemd">Supervision strategies</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_5.4_introduction_to_dynamic_supervisor.livemd">Introduction to dynamic supervisor</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>
+
 ## Restart Strategies
 
 In the previous chapter, we learned about supervision strategies that determine whether a supervisor should restart its child processes when one of them crashes. However, it's important to consider when a process should be considered "crashed." Processes can gracefully terminate, in which case we might not want to restart them, or they can crash due to errors.
@@ -252,3 +269,20 @@ These options provide flexibility in managing the shutdown behavior of child pro
 * Once all children are stopped, the supervisor itself stops as well, resulting in the orderly shutdown of the supervision tree.
 
 These points highlight the startup and shutdown behavior of supervisors, the termination process for child processes, and the flow of exit signals within the supervision tree.
+
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_5.2_supervision_strategies.livemd">Supervision strategies</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_5.4_introduction_to_dynamic_supervisor.livemd">Introduction to dynamic supervisor</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>

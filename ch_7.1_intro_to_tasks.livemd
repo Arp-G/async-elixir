@@ -1,5 +1,22 @@
 # Introduction to Tasks
 
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_6.0_project_building_a_download_manager.livemd">Project: Building a download manager</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_7.2_awaiting_tasks.livemd">Awaiting tasks</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>
+
 ## Introduction
 
 In the previous chapters, we explored various methods of starting processes, including `spawn/1` and `spawn_link/1`. Now, let's dive into the Task module, which provides a more convenient approach to spawning processes for performing tasks.
@@ -52,3 +69,20 @@ In the case of the `ref` field in the Task struct, it represents a monitor refer
 <!-- livebook:{"break_markdown":true} -->
 
 In the upcoming chapters, we will dive deeper into the capabilities of tasks. We will explore how to await task completion, supervise tasks, and uncover many more exciting features. Stay tuned!
+
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_6.0_project_building_a_download_manager.livemd">Project: Building a download manager</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_7.2_awaiting_tasks.livemd">Awaiting tasks</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>

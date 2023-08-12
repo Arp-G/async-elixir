@@ -1,4 +1,21 @@
-# Processes
+# Process Internals
+
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_1.2_immutability_and_memory_management.livemd">Immutability and memory management</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_2.2_process_basics.livemd">Process basics</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>
 
 ## What are processes?
 
@@ -23,3 +40,20 @@ It is worth noting that in the early versions of Erlang, parallelism was not ava
 * https://elixir-lang.org/getting-started/processes.html
 * https://hexdocs.pm/elixir/1.12/Process.html
 * https://www.erlang-solutions.com/blog/understanding-processes-for-elixir-developers/
+
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_1.2_immutability_and_memory_management.livemd">Immutability and memory management</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_2.2_process_basics.livemd">Process basics</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
+</div>
