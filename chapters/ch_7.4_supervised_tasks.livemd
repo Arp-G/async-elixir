@@ -71,7 +71,9 @@ Note that in the above example the spawed task was still linked to the caller pr
 
 <!-- livebook:{"break_markdown":true} -->
 
-In the above example we use a single task supervisor process to launch multiple tasks, this can quickly become a bolttleneck in scenarios were lots of tasks are being spawed and the supervisor process is not able to keep up. In such cases we can use the partition supervisor that will by default start a dynamic supervisor for each core in our machine. So it will start multiple instances of the Task.Supervisor and then pick a random instance to start the task on.
+In the above example we use a single task supervisor process to launch multiple tasks, this can quickly become a bolttleneck in scenarios were lots of tasks are being spawed and the supervisor process is not able to keep up.
+
+In such cases we can use the partition supervisor that will by default start a dynamic supervisor for each core in our machine. So it will start multiple instances of the `Task.Supervisor` and then pick a random instance to start the task on.
 
 <!-- livebook:{"break_markdown":true} -->
 
@@ -93,8 +95,6 @@ Task.Supervisor.async(
 )
 ```
 
-ghh
-
 ```elixir
 Task.Supervisor.start_child(
   AwesomeTaskSupervisor,
@@ -110,7 +110,7 @@ Task.Supervisor.start_child(
 
 However, it's important to note that when using the `Task.Supervisor.start_child/2` function, we do not receive a task struct that can be directly awaited or used with other functions in the `Task` module. Instead, we receive the PID of the task process.
 
-Furthermore, it's worth mentioning that when using other functions in the `Task.Supervisor` module, such as `async/3`, `async_nolink/3`, etc., the spawned task processes have a `:temporary` restart strategy, which cannot be changed. This means that if a task process crashes, it will not be automatically restarted by the supervisor.
+Furthermore, it's worth mentioning that when using other functions in the `Task.Supervisor` module, such as `async/3`, `async_nolink/3`, etc, the spawned task processes have a `:temporary` restart strategy, which cannot be changed. This means that if a task process crashes, it will not be automatically restarted by the supervisor.
 
 ## Unlinked supervised tasks
 
@@ -150,21 +150,6 @@ Task.await(unlinked_task)
 ```
 
 Note this function requires the task supervisor to have `:temporary` as the `:restart` option (the default), as `async_nolink/3` keeps a direct reference to the task which is lost if the task is restarted.
-
-<!-- livebook:{"break_markdown":true} -->
-
-### Task.Supervisor.async_nolink/3 vs Task.Supervisor.start_child/3
-
-TODO: clean up the explaination.
-
-For both the spawned task process is NOT linked to the caller process.
-
-If you plan on awaiting or yielding Use async no link.
-
-If you want a fire and forget Use start child. This command is useful in case the task needs to perform side-effects (like I/O) and you have no interest in its results nor if it completes successfully.
-
-start_child simply spawns a process under a supervisor
-async_nolink on the other hand spawns the process under a supervisor, monitors it, and sends it a message. an extra monitor and a couple of extra messages sent aren't a big deal, the larger point is semantic. start_child makes it clear that you don't care about the result. async_nolink implies that you probably do, or at a minimum care about the life of task as the monitor will tell you when when it dies.
 
 <!-- livebook:{"break_markdown":true} -->
 
