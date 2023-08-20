@@ -41,6 +41,7 @@ defmodule Stack do
 
   @impl true
   def init(arg) do
+    IO.puts("Stack GenServer starting up!")
     {:ok, [arg]}
   end
 

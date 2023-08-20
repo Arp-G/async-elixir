@@ -19,15 +19,15 @@
 
 ## What is a Genserver?
 
-In OTP, we have several behaviors that formalize common patterns in programming. Behaviors can be thought of as design patterns for processes. Over time, programmers have identified common patterns of using processes in OTP and designed standardized interfaces to cater to such use cases.
+In OTP(Open Telecom Platform), we have several behaviors that formalize common patterns in programming. Behaviors can be thought of as design patterns for processes. Over time, programmers have identified common patterns of using processes in OTP and designed standardized interfaces to cater to such use cases.
 
-One such behavior is the GenServer, which comes bundled with OTP. Other examples of behaviors include Supervisors and Applications.
+One such behavior is the GenServer(Generic Server), which comes bundled with OTP. Other examples of behaviors include Supervisors and Applications.
 
 At its most basic level, **a GenServer is a single process that runs a loop and handles one message per iteration, passing along an updated state**. By using the GenServer behavior and implementing the necessary callbacks, we can easily implement a client-server relation.
 
 A GenServer process starts by initializing its state and then enters a waiting state, anticipating incoming messages. Upon receiving a message, the process handles it, updates its state, and returns to the waiting state (genserver loop).
 
-A process can only execute when it receives a message. After initialization, a process simply waits for messages, meaning that an **idle process doesn't consume any resources**.
+A process can only execute when it receives a message. After initialization, a process simply waits for messages, an **idle process doesn't consume any resources**.
 
 ## Genserver callbacks
 
@@ -121,7 +121,7 @@ To start the GenServer, we call `GenServer.start(Counter, 0)` which starts the G
 
 #### handle_cast/2
 
-We then send different cast messages like :inc and :dec to the GenServer to modify the process state, which, in our case, increments or decrements the counter. The `handle_cast/2` GenServer callback handles these cast calls. It's important to remember that cast messages are asynchronous and the `GenServer.cast/2` call does not wait for the cast message to be processed. Also, using cast, the GenServer **cannot send a reply** back to the caller process, so we only receive a `:ok` as the return value when calling `GenServer.cast/2`.
+We then send different cast messages like :inc and :dec to the GenServer to modify the process state, which, in our case, increments or decrements the counter. The `handle_cast/2` GenServer callback handles these cast calls. It's important to remember that cast messages are **asynchronous** and the `GenServer.cast/2` call does not wait for the cast message to be processed. Also, using cast, the GenServer **cannot send a reply** back to the caller process, so we only receive a `:ok` as the return value when calling `GenServer.cast/2`.
 
 #### handle_call/3
 
@@ -157,9 +157,11 @@ This callback is also rarely used. It handles changes to the GenServer's state w
 
 The `terminate/2` callback is triggered when a GenServer is about to exit, allowing for any necessary cleanup operations. However, it is important to note that `terminate/2` is not always guaranteed to be called.
 
-`terminate/2` is only called when the GenServer is trapping exits using the `Process.flag(:trap_exit, true)` OR if in a callback we return a `:stop` tuple or `raise` and exception. We will later study about process supervisors which can stop a genserver using a `:brutal_kill` strategy which alos does not result in a call to `terminate/2`.
+`terminate/2` is only called when the GenServer is trapping exits using the `Process.flag(:trap_exit, true)` OR if in a callback we return a `:stop` tuple or `raise` and exception. We will later study about process supervisors which can stop a genserver using a `:brutal_kill` strategy which also does not result in a call to `terminate/2`.
 
 Therefore it is *not guaranteed* that `terminate/2` is called when a GenServer exits and we should not rely on it and place critical logic in this callback.
+
+When using `GenServer.stop/2` the terminate/2 callback will be invoked before exiting even if the GenServer process is not trapping exits.
 
 For further information, see the discussion [here](https://stackoverflow.com/a/39775617).
 
@@ -186,6 +188,13 @@ Now that we have got an overview of the workings of a GenServer lets look at som
   * Returning `{:continue, term()}` tells the GenServer to continue processing the message, triggering the `handle_continue/2` callback.
   * Returning `{:stop, reason, new_state}` terminates the GenServer process.
   * Returning `:hibernate` puts the GenServer process to sleep, freeing up resources.
+
+## References
+
+* [HexDocs: GenServer](https://hexdocs.pm/elixir/GenServer.html#call/3)
+* [ElixirLang: GenServer](https://elixir-lang.org/getting-started/mix-otp/genserver.html)
+* [Exercism: GenServer](https://exercism.org/tracks/elixir/concepts/genserver)
+* https://github.com/DockYard-Academy/curriculum/blob/main/reading/genservers.livemd
 
 ## Navigation
 

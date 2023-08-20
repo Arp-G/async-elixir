@@ -19,6 +19,10 @@
 
 ## Building a GenServer from scratch
 
+Let's delve into crafting a simplified GenServer-like implementation using Elixir's fundamental primitives such as `spawn_link` and `send`. This exercise will give us a clearer insight into the inner workings of GenServers.
+
+For the sake of simplicity, we will focus on implementing only the commonly used callbacks: `init/1`, `handle_call/3`, `handle_cast/2`, and `handle_info/2`.
+
 ```elixir
 defmodule MyGenServer do
   # Callbacks to implement

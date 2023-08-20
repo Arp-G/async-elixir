@@ -49,7 +49,7 @@ In Elixir and Erlang, the term "processes" does not refer to operating system pr
 
 Surprisingly, each process in Elixir and Erlang requires only around 300 words of memory and takes microseconds to start, making them incredibly lightweight. In fact, within the Erlang Virtual Machine, every entity executing code operates within a process.
 
-For instance, in [Phoenix](https://www.phoenixframework.org/), when making a regular HTTP request using Phoenix controllers, the corresponding connection is allocated its own process. This process is swiftly terminated once the response is sent and the connection is closed. In [LiveView](https://github.com/phoenixframework/phoenix_live_view) we keep that process alive.
+For instance, in [Phoenix](https://www.phoenixframework.org/), when making a regular HTTP request using Phoenix controllers, the corresponding connection is allocated its own process. This process is swiftly terminated once the response is sent and the connection is closed. In [LiveView](https://github.com/phoenixframework/phoenix_live_view) we keep that process alive since we work with websockets.
 
 Each process is capable of executing code and possesses a **first-in-first-out** mailbox to which other processes can send messages. Likewise, it can send messages to other processes. Processes in Elixir and Erlang are inherently **sequential**, meaning they handle one message at a time.
 
@@ -78,7 +78,7 @@ A load balancer is also in place, responsible for executing migration logic to a
 You can find the numer of schedulers in your IEX session using the `System.schedulers/0` function.
 
 ```elixir
-# Returns the number of schedulers online in the VM.
+# Returns the number of schedulers in the VM.
 System.schedulers()
 
 # Returns the number of schedulers online in the VM.

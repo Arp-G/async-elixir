@@ -19,7 +19,7 @@
 
 ## Immutability in elixir
 
-In Elixir, variables function as labels that refer to specific values. These values are immutable, meaning they cannot be changed. However, the label or variable can be reassigned to a different value. This provides the flexibility to bind the same value to multiple labels or variables.
+In Elixir, variables function as **labels** that refer to specific values. These values are immutable, meaning they cannot be changed. However, the label or variable can be reassigned to a different value. This provides the flexibility to bind the same value to multiple labels or variables.
 
 In Erlang, it is not possible to reassign or rebind a variable. Attempting to do so will result in an error, as demonstrated in the following code:
 
@@ -30,7 +30,9 @@ X = X * 10.  % throws an exception error: no match of right hand side value 50
 
 The error in the Erlang code occurs because the variable X is initially assigned to the value of 5, but then an attempt is made to reassign it to a new value (i.e. X * 10). Since variables in Erlang are immutable, this operation is not allowed and the code will fail to compile.
 
-On the other hand, Elixir allows for rebinding of values, which makes the same code valid in Elixir. This is because in Erlang, the = operator functions as a match operator rather than an assignment operator. Therefore, in the Erlang code X = X * 10, the left-hand side of the match (X) is already bound to the value of 5, and trying to match it with the right-hand side (X * 10) which evaluates to 50, results in a mismatch.
+On the other hand, Elixir allows for rebinding of values, which makes the same code valid in Elixir. This is because in Erlang, **the = operator functions as a match operator rather than an assignment operator**.
+
+Therefore, in the Erlang code `X = X * 10`, the left-hand side of the match (X) is already bound to the value of 5, and trying to match it with the right-hand side (X * 10) which evaluates to 50, results in a mismatch.
 
 In Elixir, the ^ (pin) operator can be used to force a match, while the assignment operation uses the regular = operator. For example:
 
@@ -45,7 +47,7 @@ iex(3)> ^x = x * 10 # Matching
     iex:3: (file)
 ```
 
-In Elixir, any input passed into a function to be transformed creates a new value without modifying the original value. This allows for safe concurrent access to the same data by multiple processes. Since there is no shared memory that is getting mutated by multiple processes, concurrency is easier to manage. Any transformation on the original data will result in new data being created.
+In Elixir, any input passed into a function to be transformed creates a new value without modifying the original value. This allows for safe concurrent access to the same data by multiple processes. Since there is **no shared memory** that is getting mutated by multiple processes, concurrency is easier to manage. Any transformation on the original data will result in new data being created.
 
 ## Example of immutability & closures in elixir
 
@@ -89,7 +91,7 @@ To solve this problem there is a class of datastructures known as **persistent d
 
 Persistent data structures are data structures that allow for the efficient storage and retrieval of data even after multiple modifications or updates have been made. These data structures preserve the previous versions of data and allow for efficient access to those versions.
 
-A persistent data structure maintains the previous versions of data by using a technique known as structural sharing. Structural sharing allows the data structure to share the unchanged parts of its structure across multiple versions of the data, rather than copying the entire structure each time a modification is made. This sharing of unchanged structure makes persistent data structures efficient in both time and space.
+A persistent data structure **maintains the previous versions of data** by using a technique known as structural sharing. Structural sharing allows the data structure to **share the unchanged parts of its structure** across multiple versions of the data, rather than copying the entire structure each time a modification is made. This sharing of unchanged structure makes persistent data structures efficient in both time and space.
 
 Persistent data structures are widely used in functional programming languages, where immutability is a core concept.
 
@@ -98,14 +100,15 @@ immutability as a first-class citizen while not having to copy the entire data s
 any time something changes (with the exceptions of when data is passed between
 processes or when data is extracted from native data stores like ETS).
 
-For example, Elixir lists are linked lists, and a linked list (Tree with one branch)
+For example, in Elixir lists are actually linked lists.
+A linked list is a Tree with one branch.
 
 ```
 Elixir: list = [1, 2, 3, 4]
 Tree:   1 -> 2 -> 3 -> 4
-Every time you prepend an element to a list, it will share its tail:
 
-Elixir: [0|list]
+Every time you prepend an element to a list, it will share its tail:
+Elixir: [0 | list]
 Tree:   0 -> (1 -> 2 -> 3 -> 4)
 ```
 

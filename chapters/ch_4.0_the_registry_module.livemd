@@ -25,7 +25,7 @@ From the official documentation
 
 Lets go through some important points about registries...
 
-* The Registry in Elixir is a process store that stores **key-value** pairs, allowing us to register a process under a specific name.
+* The Registry in Elixir is a **process store** that stores **key-value** pairs, allowing us to register a process under a specific name.
 * There are two types of Registries: **unique and duplicate**. A unique Registry only permits one process to be registered under a given name, while a duplicate Registry permits multiple processes to be registered under the same name.
 * Each entry in the Registry is associated with the process that registered it. If the process crashes, the Registry automatically removes the keys associated with that process.
 * The Registry **compares keys using the match operation (===/2)**.
@@ -127,6 +127,8 @@ When utilizing duplicate registries, it is not possible to use the :via option. 
 Registry.lookup(Registry.DupProcessStore, "async_city")
 ```
 
+Observe how the invocation of `Registry.lookup/2` resulted in a list containing 2 tuples, each representing a process along with its associated metadata. These two processes were registered under the identical name, "async_city".
+
 ## Dispatching using Registry
 
 Dispatching allows us to fetch all entries for all processes registered under a given key. We pass a callback function which would receive the list of `{pid, value}` for every entry registered under the given key.
@@ -193,16 +195,22 @@ Lets see this in action.
     partitions: System.schedulers_online()
   )
 
+# Register the current process under the "Registry.ChatPubSub" registery with a key "chat_room:1"
 {:ok, _} = Registry.register(Registry.ChatPubSub, "chat_room:1", [])
 
+# Dispatching by looking up all process registered with the key "chat_room:1" in the
+# "Registry.ChatPubSub" registry and then sending them a message.
 Registry.dispatch(Registry.ChatPubSub, "chat_room:1", fn entries ->
   for {pid, _} <- entries, do: send(pid, {:broadcast, "hello world"})
 end)
 
+# Receive any broadcasted messages
 receive do
   {:broadcast, message} -> IO.inspect(message, label: "Received broadcast")
 end
 ```
+
+By using this approach, we can register multiple processes under a single key within a Registry and subsequently dispatch messages to all the processes associated with that key.
 
 ## Other registry functions and match specs
 

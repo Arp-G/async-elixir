@@ -40,7 +40,7 @@ Before diving into the course, make sure you have the following:
 
 #### About me
 
-I am a seasoned full-stack software engineer with four years of focused experience in Elixir programming. Over this period, I have actively engaged in various Elixir projects, extensively delved into Elixir literature, including books and blogs, and honed my skills in this powerful language. My fascination with Elixir's process-oriented architecture has inspired me to condense my insights into this comprehensive course.
+I am a full-stack software engineer with four years of focused experience in Elixir programming. Over this period, I have actively engaged in various Elixir projects, extensively delved into Elixir literature, including books and blogs, and honed my skills in this powerful language. My fascination with Elixir's process-oriented architecture has inspired me to condense my insights into this course.
 
 ## Table of Contents
 

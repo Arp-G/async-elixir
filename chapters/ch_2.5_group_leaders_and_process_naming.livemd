@@ -19,13 +19,22 @@
 
 ## Group Leader
 
-In Erlang, every process belongs to a process group, and each group has a group leader. The group leader is responsible for handling I/O for the processes in its group. When a process is spawned, it inherits the same group leader as its parent process. At system start-up, the init process is both its own group leader and the group leader of all processes.
+In Erlang, every process belongs to a process group, and each group has a group leader. The group leader is **responsible for handling I/O** for the processes in its group. When a process is spawned, it inherits the same group leader as its parent process.
 
-The Erlang VM models I/O devices as processes, which enables different nodes in the same network to exchange file processes and read/write files between nodes. The group leader can be configured per process and is used in different situations. For example, when executing code in a remote terminal, it ensures that messages from a remote node are redirected and printed in the terminal that triggered the request.
+At system start-up, the init process(the first process which coordinates the start-up of the system) is both its own group leader and the group leader of all processes.
 
-The main responsibility of the group leader is to collect I/O output from all processes in its group and pass it to or from the underlying system. It essentially owns the standard input, standard output, and standard error channels on behalf of the group.
+The Erlang VM **models I/O devices as processes**, which enables different nodes in the same network to exchange file processes and read/write files between nodes. The group leader can be configured per process and is used in different situations. For example, when executing code in a remote terminal, it ensures that messages from a remote node are redirected and printed in the terminal that triggered the request.
+
+The **main responsibility of the group leader is to collect I/O output from all processes in its group and pass it to or from the underlying system**. It essentially owns the standard input, standard output, and standard error channels on behalf of the group.
 
 When a file is opened using `File.open/2`, it returns a tuple like `{:ok, io_device}`, where `io_device` is the PID of the process that handles the file. This process monitors the process that opened the file (the owner process), and if the owner process terminates, the file is closed, and the process itself terminates too.
+
+<!-- livebook:{"force_markdown":true} -->
+
+```elixir
+{:ok, io_device_pid} = File.open("test.csv", [:write])
+IO.write(io_device_pid, "a binary")
+```
 
 When you call `IO.write(pid, binary)`, the IO module sends a message to the process identified by pid with the desired operation, such as :put_chars.
 The message has the following structure: `{:io_request, <pid>, <reference>, {:put_chars, :unicode, "hello"}}`.
@@ -33,7 +42,9 @@ The message has the following structure: `{:io_request, <pid>, <reference>, {:pu
 When you write to :stdio, you are actually sending a message to the group leader, which writes to the standard-output file descriptor.
 Therefore, these three code snippets are equivalent:
 
-```
+<!-- livebook:{"force_markdown":true} -->
+
+```elixir
 IO.puts "hello"
 IO.puts :stdio, "hello"
 IO.puts Process.group_leader, "hello"
@@ -44,7 +55,9 @@ To understand this better let see some examples
 Suppose we have two Erlang nodes named "node1" and "node2".
 You can create two `iex` shells for this like
 
-```
+<!-- livebook:{"force_markdown":true} -->
+
+```elixir
 iex --sname node1@localhost
 iex --sname node2@localhost
 ```
@@ -53,7 +66,9 @@ iex --sname node2@localhost
 
 If we execute the following code in the iex shell of node1:
 
-```
+<!-- livebook:{"force_markdown":true} -->
+
+```elixir
 Node.spawn_link(:node2@localhost, fn ->
   IO.puts("I will be executed on node2 but printed on node1 since the group leader is node1")
 end)
@@ -64,7 +79,9 @@ Therefore, the output will be printed on node1's standard output stream, even th
 
 On the other hand, if we specify the device PID as the `:init` process on node2, the output will be seen on node2's standard output stream:
 
-```
+<!-- livebook:{"force_markdown":true} -->
+
+```elixir
 Node.spawn_link(:node2@localhost, fn ->
   init_process_pid = Process.whereis(:init)
 
@@ -78,7 +95,9 @@ end)
 Finally, we can also set the group leader of a process explicitly by calling `Process.group_leader/2`.
 In the following example, we set the group leader of the process running on node2 to node2's `:init` process:
 
-```
+<!-- livebook:{"force_markdown":true} -->
+
+```elixir
 Node.spawn_link(:node2@localhost, fn ->
   init_process_pid = Process.whereis(:init)
   Process.group_leader(self(), init_process_pid)
@@ -98,12 +117,23 @@ We can name processes and then refer to them via their registered name.
 
 ```elixir
 Process.register(self(), :my_process)
-Process.registered() |> IO.inspect()
 
+Process.registered()
+|> Enum.any?(&(&1 == :my_process))
+|> IO.inspect(label: ":my_process registered?")
+```
+
+```elixir
 send(:my_process, "Hello")
-Process.info(self(), :messages) |> IO.inspect()
+Process.info(self(), :messages)
+```
+
+```elixir
 Process.unregister(:my_process)
-Process.registered() |> IO.inspect()
+
+Process.registered()
+|> Enum.any?(&(&1 == :my_process))
+|> IO.inspect(label: ":my_process registered?")
 ```
 
 ## Resources

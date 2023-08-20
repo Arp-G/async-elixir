@@ -35,13 +35,13 @@ Process.info(pid)
 
 [Process.info/2](http://Process.info/2) can be used to view additional info like backtrace `Process.info(pid, :backtrace)`
 
-The observer is also a great tool to observe processes, we will look into it in greater details later.
+The [observer](https://elixir-lang.org/getting-started/debugging.html#observer) is also a great tool to observe processes.
 
 ## Process Dictionary
 
 There is actually one more memory area in a process where Erlang terms can be stored, the *Process Dictionary*.
 
-The *Process Dictionary* (PD) is a process local key-value store. One advantage with this is that all keys and values are stored on the heap and there is no copying as with send or an ETS table.
+The *Process Dictionary* (PD) is a process local key-value store. One advantage with this is that all keys and values are stored on the heap and there is no copying as with `send/2` or an ETS table.
 
 ([ETS](https://elixirschool.com/en/lessons/storage/ets#overview-0) or Erlang Term Storage is a in-memory store for Elixir and Erlang objects that comes included. ETS is capable of storing large amounts of data and offers constant time data access. Tables in ETS are created and owned by individual processes. When an owner process terminates, its tables are destroyed)
 
@@ -77,7 +77,7 @@ The most fundamental way to create processes in Elixir is by using the [spawn/1]
 
 Many higher-level abstractions, such as Task, GenServer, and Agent, are built on top of these primitive functions.
 
-These functions are part of the [Kernel](https://hexdocs.pm/elixir/1.12/Kernel.html) module and are automatically imported, allowing us to call them directly without needing to use the Kernel. prefix.
+These functions are part of the [Kernel](https://hexdocs.pm/elixir/1.12/Kernel.html) module and are automatically imported, allowing us to call them directly without needing to use the `Kernel.` prefix.
 
 Let's take a look at some examples of their usage...
 
@@ -95,15 +95,24 @@ Process.alive?(pid) |> IO.inspect()
 Process.alive?(pid)
 ```
 
+When spawning a process it goes through a lifecycle like so...
+
+<!-- livebook:{"break_markdown":true} -->
+
+```mermaid
+flowchart LR
+spawn --> NewProcess --> ExecuteCallbackFunction --> Dead
+```
+
 ## Exchanging messages between processes
 
-To exchange messages between processes in Elixir, you can use the send/2 and receive/1 functions.
+To exchange messages between processes in Elixir, we can use the `send/2` and `receive/1` functions.
 
-When a process uses send/2 to send a message, it doesn't block - instead, the message is placed in the recipient's mailbox, and the sending process continues.
+When a process uses `send/2` to send a message, it **doesn't block** - instead, the message is placed in the recipient's mailbox, and the sending process continues.
 
-On the other hand, when a process uses receive/1, it blocks until a matching message is found in its mailbox. The receive/1 function searches the mailbox for a message that matches any of the given patterns.
+On the other hand, when a process uses `receive/1`, it blocks until a matching message is found in its mailbox. The call to `receive/1` searches the mailbox for a message that matches any of the given patterns.
 
-receive/1 supports guards and multiple clauses, such as case/2.
+`receive/1` supports guards and multiple clauses, such as `case/2`.
 
 Let's look at an example of a process sending a message to itself.
 
@@ -117,7 +126,7 @@ send(self_pid, :ping)
 # Check messages in mailbox without consuming them
 Process.info(self_pid, :messages) |> IO.inspect(label: "Messages in mailbox")
 
-# Recieve the message waiting in mailbox
+# Recieve the message waiting in mailbox (consumes the message in the mailbox)
 receive do
   :ping -> IO.puts(:pong)
 end

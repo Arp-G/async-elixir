@@ -19,9 +19,9 @@
 
 ## Process Monitors
 
-Process links are bidirectional, which means that if a linked process exits, it will also bring down the current process. However, if we only want the current process to be notified when a process has exited, instead of linking, we can use monitors.
+Process **links are bidirectional**, which means that if a linked process exits, it will also bring down the current process. However, if we only want the current process to be notified when a process has exited, instead of linking, we can use monitors.
 
-Unlike linking, monitoring is unidirectional. If there is an error in a monitored process, it does not bring down the current process. Instead, the current process is notified via a `{:DOWN, <reference>, :process, <pid>, <exit_reason>}` message.
+Unlike linking, **monitoring is unidirectional**. If there is an error in a monitored process, it does not bring down the current process. Instead, the current process is notified via a `{:DOWN, <reference>, :process, <pid>, <exit_reason>}` message.
 
 It's worth noting that even when the monitored process exits normally, we still receive a message. In the case of process linking, a process is only notified if the linked process exits abnormally (i.e., with a reason other than :normal).
 
@@ -68,7 +68,7 @@ p2 =
     Process.hibernate(IO, :puts, ["P2 woken from hibernation"])
 
     # This never executes as execution resumes at the function passed to Process.hibernate/3
-    :timer.sleep(:infinity)
+    IO.puts("Kabooom!")
   end)
 
 Process.info(p1, :total_heap_size) |> IO.inspect(label: "Heap size of P1")
@@ -76,12 +76,17 @@ Process.info(p2, :total_heap_size) |> IO.inspect(label: "Heap size of P2")
 
 # Wake p2 from hibernation by sending it a message
 send(p2, :msg)
+:timer.sleep(100)
+
+# Here the process is no longer alive since after executing the IO.puts/1
+# call it has no other work and exits normally.
 Process.alive?(p2) |> IO.inspect(label: "P2 alive")
 ```
 
 ## Resources
 
 * https://elixirforum.com/t/when-is-hibernation-of-processes-useful/23181/5
+* https://hexdocs.pm/elixir/1.12.3/Process.html
 
 ## Navigation
 
