@@ -8,7 +8,9 @@ The course is best experienced alongside the video course, which is a work in pr
 
 ## Getting Started
 
-To begin, make sure you have [Livebook](https://livebook.dev/) installed, then open the [Course Overview](chapters/ch_1.1_concurrency_in_elixir.livemd) file in livebook.
+[![Run in Livebook](https://livebook.dev/badge/v1/blue.svg)](https://livebook.dev/run?url=https%3A%2F%2Fgithub.com%2FArp-G%2Fasync-elixir%2Fblob%2Fmaster%2Fchapters%2Fch_0.0_start.livemd)
+
+OR make sure you have [Livebook](https://livebook.dev/) installed, then open the [Course Overview](chapters/ch_1.1_concurrency_in_elixir.livemd) file in livebook.
 
 ## Course Status
 
