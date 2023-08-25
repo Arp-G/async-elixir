@@ -117,6 +117,8 @@ We will use [Kino](https://hexdocs.pm/kino/) to draw the supervision tree before
 ```elixir
 {:ok, supervisor_pid} = CrashDummySupervisor.start_link(:one_for_one)
 
+Process.info(supervisor_pid, :links) |> IO.inspect(label: "Supervisors links")
+
 Supervisor.which_children(supervisor_pid) |> IO.inspect(label: "Supervisors Children")
 
 :sys.get_state(GenServer.whereis(:dummy1)) |> IO.inspect(label: "Dummy 1 state")
@@ -192,7 +194,7 @@ This time we can see that when the `:dummy_2` process crashed the supervisor res
 
 ## :rest_for_one
 
-With the `:rest_for_one` strategy, if a child process terminates, not only the terminated child process but also the subsequent child processes that were started after it will be terminated and restarted.
+With the `:rest_for_one` strategy, if a child process terminates, not only the terminated child process but also the **subsequent child processes** that were started after it will be terminated and restarted.
 
 This strategy is useful when you want to restart only a portion of your supervision tree. In this case, when a process crashes, only the processes dependent on the crashed process will be restarted.
 

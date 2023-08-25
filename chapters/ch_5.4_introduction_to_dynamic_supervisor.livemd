@@ -25,11 +25,11 @@ Mix.install([
 
 ## The Dynamic Supervisor
 
-In the previous chapter, we learned about the Supervisor behavior, which enables us to supervise processes and restart them in case of failures, ensuring fault tolerance. However, the Supervisor behavior requires us to specify all the child processes it will supervise in advance as child specifications. In other words, the Supervisor module was primarily designed to handle static children.
+In the previous chapter, we learned about the Supervisor behavior, which enables us to supervise processes and restart them in case of failures, ensuring fault tolerance. However, the Supervisor behavior requires us to specify all the child processes it will supervise in advance as child specifications. In other words, **the Supervisor module was primarily designed to handle static children.**
 
 When the supervisor starts, it creates and starts the child processes in the specified order, and when the supervisor is stopped, it terminates the processes in the reverse order.
 
-On the other hand, a DynamicSupervisor **starts with no children** initially. Instead, children are started on demand using the `start_child/2` function, and there is **no specific ordering** between the children. This provides a lot of flexibility as we can dynamically add and remove child processes to be supervised. The DynamicSupervisor can efficiently handle a large number of children by utilizing optimized data structures and perform certain operations, such as shutting down, concurrently.
+On the other hand, a DynamicSupervisor **starts with no children** initially. Instead, children are started **on demand** using the `start_child/2` function, and there is **no specific ordering** between the children. This provides a lot of flexibility as we can dynamically add and remove child processes to be supervised. The DynamicSupervisor can efficiently handle a large number of children by utilizing optimized data structures and perform certain operations, such as shutting down, concurrently.
 
 <!-- livebook:{"break_markdown":true} -->
 

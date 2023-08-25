@@ -114,13 +114,13 @@ Tree:   0 -> (1 -> 2 -> 3 -> 4)
 
 ## High level overview of garbage collection in elixir
 
-In Erlang, each process has its own private heap and runs a **generational copying garbage collection**. The heap is divided into two segments - young and old generations - based on the likelihood of an object becoming garbage in the short term.
+Erlang employs a generational copying garbage collection system where each process has its own private heap. This heap is divided into two segments - the young and old generations. Newly allocated data resides in the young generation, while data that has survived multiple garbage collection cycles is stored in the old generation.
 
-Newly allocated data is stored in the young generation, while data that has survived a certain number of garbage collection cycles is stored in the old generation. In addition, Erlang also employs a reference counting garbage collection for the global shared heap.
+The young generation undergoes more frequent garbage collection, whereas the old generation is only garbage collected during a full sweep, which occurs after a certain number of generational GC cycles. It can also be collected if not enough memory is reclaimed or if manually invoked. This process is referred to as **soft real-time** garbage collection because it halts only the process undergoing GC without affecting other processes. This characteristic is well-suited for soft real-time systems, as the entire runtime doesn't need to pause.
 
-**Shared Heap GC**
+In addition to this, Erlang implements [reference counting garbage collection](https://en.wikipedia.org/wiki/Garbage_collection_\(computer_science\)#Reference_counting) for the shared heap. Here, objects in the shared heap are assigned reference counters that keep track of the number of references held by other objects. When an object's reference count drops to zero, it's considered inaccessible and gets destroyed.
 
-In Erlang, the garbage collector for the shared heap uses a reference counting approach. Objects in the shared heap are assigned a reference counter, which counts the number of references to the object held by other objects (ProcBin) stored in the private heap of Erlang processes. When an object's reference counter reaches zero, it is deemed inaccessible and will be destroyed.
+For a deeper dive into garbage collection, you can explore this informative [video](https://www.youtube.com/watch?v=OSdaXNQ0xhQ) and this insightful [book](https://hamidreza-s.github.io/erlang%20garbage%20collection%20memory%20layout%20soft%20realtime/2015/08/24/erlang-garbage-collection-details-and-why-it-matters.html).
 
 ## Resources
 
@@ -132,7 +132,9 @@ In Erlang, the garbage collector for the shared heap uses a reference counting a
 
 * https://elixirforum.com/t/how-would-you-explain-elixir-immutability/47323/11
 
-* https://hamidreza-s.github.io/erlang%20garbage%20collection%20memory%20layout%20soft%20realtime/2015/08/24/erlang-garbage-collection-details-and-why-it-matters.html
+* [Video on garbage collection](https://www.youtube.com/watch?v=OSdaXNQ0xhQ)
+
+* [The beam book -garbage collection](https://hamidreza-s.github.io/erlang%20garbage%20collection%20memory%20layout%20soft%20realtime/2015/08/24/erlang-garbage-collection-details-and-why-it-matters.html)
 
 ## Navigation
 

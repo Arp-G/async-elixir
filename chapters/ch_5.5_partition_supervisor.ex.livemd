@@ -205,7 +205,7 @@ GenServer.call(
 )
 ```
 
-When using integer keys with the PartitionSupervisor, the routing strategy is determined by the formula `rem(abs(key), partitions)`. In the example we provided, the message with the key `1000` was sent to partition 1 because `rem(abs(1000), 3)` equals `rem(1000, 3)` equals `1`.
+When using integer keys with the PartitionSupervisor, the routing strategy is determined by the formula `rem(abs(key), partitions)`. In the example we provided, the message with the key `1000` was sent to partition 1 because `rem(abs(1000), 3) = rem(1000, 3) = 1`.
 
 However, if the routing key is not an integer, the `:erlang.phash2(key, partitions)` hash function is used as the routing strategy. This function calculates a hash value based on the key and the number of partitions, resulting in the selection of the appropriate partition to which the message should be dispatched.
 

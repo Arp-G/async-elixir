@@ -53,7 +53,9 @@ For instance, in [Phoenix](https://www.phoenixframework.org/), when making a reg
 
 Each process is capable of executing code and possesses a **first-in-first-out** mailbox to which other processes can send messages. Likewise, it can send messages to other processes. Processes in Elixir and Erlang are inherently **sequential**, meaning they handle one message at a time.
 
-Similar to an operating system scheduler, the Erlang VM has the ability to start, pause, or preempt work as needed. While waiting for a message, a process is completely ignored by the scheduler. As a result, **idle processes do not consume any system resources**.
+Similar to an operating system scheduler, the Erlang VM has the ability to start, pause, or preempt work as needed (In computing, preemption is the act of temporarily interrupting an executing task, with the intention of resuming it at a later time).
+
+While waiting for a message, a process is completely ignored by the scheduler. As a result, **idle processes do not consume any system resources**.
 
 <!-- livebook:{"break_markdown":true} -->
 

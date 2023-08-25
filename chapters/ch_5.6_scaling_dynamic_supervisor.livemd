@@ -84,7 +84,7 @@ Notice how all the 5 instances of the `SlowGenServer` process are spawned under 
 
 ## Using a PartitionSupervisor to scale DynamicSupervisors
 
-To address the aforementioned problem, we can use a PartitionSupervisor to start multiple instances of the DynamicSupervisor. The PartitionSupervisor acts as a supervisor for multiple DynamicSupervisor processes, each running in a separate partition.
+To address the aforementioned problem, we can use a PartitionSupervisor to start multiple instances of the DynamicSupervisor. The **PartitionSupervisor acts as a supervisor for multiple DynamicSupervisor processes, each running in a separate partition**.
 
 When a new child process needs to be started, the PartitionSupervisor selects one of the DynamicSupervisor processes to handle the request. This distribution of child process creation across multiple DynamicSupervisors helps distribute the workload and prevents bottlenecks that can occur when relying on a single DynamicSupervisor.
 
@@ -158,7 +158,9 @@ Note: In most real-world scenarios, the supervisor and partition supervisor are 
 
 Here's an example of how we can start the partition supervisor under a supervision tree:
 
-```
+<!-- livebook:{"force_markdown":true} -->
+
+```elixir
 defmodule MyApp.Application do
   use Application
 

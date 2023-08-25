@@ -110,7 +110,7 @@ defmodule CrashDummySupervisor do
     Supervisor.child_spec(
       {CrashDummyServer, name},
       id: name,
-      # <= Specifying the restart strategy
+      # Specifying the restart strategy
       restart: restart_strategy
     )
   end
@@ -264,7 +264,7 @@ These options provide flexibility in managing the shutdown behavior of child pro
 
 * If a child process is not trapping exits, it will immediately shut down upon receiving the first exit signal. On the other hand, if a child process is trapping exits, it will invoke the terminate callback and must terminate within a reasonable time before the supervisor forcefully terminates it.
 
-* When an Elixir application exits, the termination propagates down the supervision tree. Supervisors always trap exits for various reasons, so they attempt to stop all their children upon receiving an exit signal. This is achieved by sending an exit signal to each child individually, allowing a timeout period before resorting to a brutal termination with `:kill`. The duration of this timeout is determined by the `shutdown` option specified in the child specification.
+* When an Elixir application exits, the termination propagates down the supervision tree. *Supervisors always trap exits* for various reasons, so they attempt to stop all their children upon receiving an exit signal. This is achieved by sending an exit signal to each child individually, allowing a timeout period before resorting to a brutal termination with `:kill`. The duration of this timeout is determined by the `shutdown` option specified in the child specification.
 
 * Once all children are stopped, the supervisor itself stops as well, resulting in the orderly shutdown of the supervision tree.
 

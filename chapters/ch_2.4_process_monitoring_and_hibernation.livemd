@@ -47,7 +47,7 @@ From the official [documentation](https://erlang.org/doc/man/erlang.html#hiberna
 
 <!-- livebook:{"break_markdown":true} -->
 
-### When is process hiberantion usefull?
+### When is process hibernation useful?
 
 Hibernation of a process can be beneficial in situations where the process should not be terminated but is not expected to receive any messages anytime soon. By hibernating the process, we can free up the memory that was allocated to the process during garbage collection and thus prevent unnecessary resource usage.
 

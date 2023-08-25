@@ -28,7 +28,7 @@ To ensure that the parent process is notified of any errors in the child process
 To illustrate this, let's consider an example...
 
 ```elixir
-unlinked_child_process = spawn(fn -> raise("BOOM! Unliked process crashed!") end)
+unlinked_child_process = spawn(fn -> raise("BOOM! Unliked process crashed!") end) |> IO.inspect()
 
 IO.inspect(Process.info(self(), :links))
 
@@ -64,9 +64,18 @@ In our case this also leads the linked live view process to crash.
 
 When a linked process exits gracefully with a reason `:normal` this does not lead to the parent process to crash. Any other reason other than `:normal` is considered an abnormal termination and will lead to the linked processes exiting as well.
 
+<!-- livebook:{"break_markdown":true} -->
+
+(Note that the call to Process.exit(pid, :normal) function is silently ignored if the specified pid is different from the calling process's own pid (self()). This is an edge case.)
+
 ```elixir
-linked_process = spawn_link(fn -> :timer.sleep(60000) end)
-Process.exit(linked_process, :normal)
+linked_process =
+  spawn_link(fn ->
+    # Process.exit(self(), :normal)
+    :timer.sleep(60000)
+  end)
+
+# Process.exit(linked_process, :normal)
 :timer.sleep(100)
 IO.puts(Process.alive?(linked_process))
 ```
@@ -90,6 +99,8 @@ defmodule LinkingProcess do
 
     # Link the two processes
     Process.link(child_process)
+
+    :timer.sleep(100)
 
     IO.inspect(Process.info(self(), :links), label: "Parent process links")
 
