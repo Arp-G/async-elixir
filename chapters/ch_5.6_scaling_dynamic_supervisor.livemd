@@ -50,7 +50,7 @@ defmodule SlowGenServer do
 end
 ```
 
-Note: In real scenarios, it's important to avoid performing time-consuming tasks in the init/1 callback of a GenServer. Instead, we should leverage the handle_continue/2 callback to handle long-running tasks and prevent them from blocking the GenServer startup process. However, for the purpose of this example, let's proceed with trying it out.
+Note: In real scenarios, it's important to avoid performing time-consuming tasks in the `init/1` callback of a GenServer. Instead, we should leverage the `handle_continue/2` callback to handle long-running tasks and prevent them from blocking the GenServer startup process. However, for the purpose of this example, let's proceed with trying it out.
 
 ```elixir
 # Start a DynamicSupervisor named "MySlowDynamicSupervisor"
@@ -61,6 +61,8 @@ Note: In real scenarios, it's important to avoid performing time-consuming tasks
     child_spec: DynamicSupervisor.child_spec([])
   )
 ```
+
+Now lets try to simultaneously add 5 child processes under our DynamicSupervisor.
 
 ```elixir
 # Lets start 5 instances of the SlowGenServer process under the DynamicSupervisor

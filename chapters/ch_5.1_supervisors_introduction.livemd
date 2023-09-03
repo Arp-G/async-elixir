@@ -47,11 +47,13 @@ defmodule Stack do
 
   @impl true
   def handle_call({:push, element}, _from, stack) do
+    IO.puts("Pushed #{inspect(element)}")
     {:reply, :pushed, [element | stack]}
   end
 
   @impl true
-  def handle_cast(:pop, [_popped | stack]) do
+  def handle_cast(:pop, [popped | stack]) do
+    IO.puts("Popped #{inspect(popped)}")
     {:noreply, stack}
   end
 end
@@ -78,6 +80,10 @@ Now lets see what happens if our Stack Genserver process crashes
 
 ```elixir
 GenServer.whereis(:stack_1) |> IO.inspect(label: "Stack Genserver Process pid")
+
+:sys.get_state(GenServer.whereis(:stack_1))
+|> IO.inspect(label: "Intial Genserver state")
+
 GenServer.call(:stack_1, {:push, 10})
 GenServer.call(:stack_1, {:push, 20})
 GenServer.cast(:stack_1, :pop)
@@ -112,7 +118,7 @@ Lets go through the different options that we can specify in the supervisor chil
 
 * `:restart` - This optional key, defaulted to `:permanent`, is an atom that determines when a terminated child process should be restarted.
 
-* `:shutdown` - This optional key, defaulted to 5_000 for workers and `:infinity` for supervisors, specifies how a child process should be terminated, either by an integer representing a timeout or the atom `:infinity`.
+* `:shutdown` - This optional key, defaulted to 5_000 (5 seconds) for workers and `:infinity` for supervisors, specifies how a child process should be terminated, either by an integer representing a timeout or the atom `:infinity`.
 
 * `:type` - This optional key, defaulted to `:worker`, specifies whether the child process is a `:worker` or a `:supervisor`.
 
@@ -154,7 +160,7 @@ A child specification can be defined in one of three ways:
    end
    ```
 
-   In this case, since `GenServer` already defines `Stack.child_spec/1`, we can leverage the automatically generated `child_spec/1` function and customize it by passing options directly to `use GenServer`.
+   In this case, since `GenServer` already defines `Stack.child_spec/1`, we can leverage the automatically generated `child_spec/1` function and customize it by passing options directly to `use GenServer`. We will see examples of this in later chapters
 
 3. Alternatively, a child specification can be specified by providing only the module name.
 

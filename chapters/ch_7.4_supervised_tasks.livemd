@@ -1,7 +1,10 @@
 # Supervised Tasks
 
 ```elixir
-Mix.install([{:httpoison, "~> 2.1"}])
+Mix.install([
+  {:httpoison, "~> 2.1"},
+  {:kino, "~> 0.9.0"}
+])
 ```
 
 ## Navigation
@@ -35,7 +38,7 @@ Lets look at the some code to understand how this works...
 
 <!-- livebook:{"break_markdown":true} -->
 
-We first start the `Task.Supervisor` as a part of our supervision tree, here we name it `AwesomeTaskSupervisor`. We can pass other options in the child specifications like `:max_restarts`, `:max_seconds`, etc. All the options are documented [here](https://hexdocs.pm/elixir/1.15.2/Task.Supervisor.html#start_link/1) in the `Task.Supervisor.start_link/1` docs.
+We first start a `Task.Supervisor` as a part of our supervision tree, here we name it `AwesomeTaskSupervisor`. We can pass other options in the child specifications like `:max_restarts`, `:max_seconds`, etc. All the options are documented [here](https://hexdocs.pm/elixir/1.15.2/Task.Supervisor.html#start_link/1) in the `Task.Supervisor.start_link/1` docs.
 
 ```elixir
 children = [{Task.Supervisor, name: AwesomeTaskSupervisor}]
@@ -57,7 +60,8 @@ task =
   )
   |> IO.inspect(label: "TASK")
 
-IO.inspect(Process.info(self(), :links), label: "Parent process #{inspect(self())} links")
+Process.info(self(), :links)
+|> IO.inspect(label: "Parent process #{inspect(self())} links")
 
 # Wait for spawed task to finish
 :timer.sleep(300)
@@ -67,7 +71,7 @@ IO.inspect(Process.info(self(), :links), label: "Parent process #{inspect(self()
 IO.inspect(Process.info(self(), :messages))
 ```
 
-Note that in the above example the spawed task was still linked to the caller process and was monitered by the caller process. This means that if the task process crashed it would bring down the caller process as well.
+Note that in the above example the spawed task was **still linked to the caller process** and was monitered by the caller process. This means that if the task process crashed it would bring down the caller process as well.
 
 <!-- livebook:{"break_markdown":true} -->
 
@@ -83,7 +87,7 @@ For this we would need to define the child spec of the supervisor like so
 # In the `child_spec` option we pass the name of the supervisor that we want to partition
 children = [{PartitionSupervisor, child_spec: Task.Supervisor, name: ScalableTaskSupervisor}]
 
-Supervisor.start_link(children, strategy: :one_for_one)
+{:ok, supervisor_pid} = Supervisor.start_link(children, strategy: :one_for_one)
 ```
 
 We can then start tasks via the partitioned task supervisor using the ` using the {:via, PartitionSupervisor, {name, key}}` format, `name` is the name of the partition supervisor and `key` is the routing key.
@@ -91,26 +95,40 @@ We can then start tasks via the partitioned task supervisor using the ` using th
 ```elixir
 Task.Supervisor.async(
   {:via, PartitionSupervisor, {ScalableTaskSupervisor, :my_routing_key}},
-  fn -> IO.puts("Hello from a supervised task!") end
+  fn ->
+    :timer.sleep(200)
+    IO.puts("Hello from a supervised task!")
+  end
 )
+
+Kino.Process.render_sup_tree(supervisor_pid)
 ```
 
+You'll observe the initiation of multiple task supervisors, each associated with a specific partition. These supervisors operate under our "ScalableTaskSupervisor" partition supervisor, and our task was launched within one of these partitions.
+
+<!-- livebook:{"break_markdown":true} -->
+
+Let's now explore the behavior when a supervised task encounters an unexpected crash.
+
 ```elixir
+# Now lets spawn a supervised task process that will crash
 Task.Supervisor.start_child(
   AwesomeTaskSupervisor,
   fn ->
-    IO.puts("Boom!")
+    IO.puts("A task was started!")
     raise "boom"
   end,
-  # restart process if the exit is abnormal
+  # restart process if the exit is abnormal, by default it is :temporary
   restart: :transient
 )
-|> IO.inspect()
+|> IO.inspect(label: "Returned from call to start_child")
 ```
 
-However, it's important to note that when using the `Task.Supervisor.start_child/2` function, we do not receive a task struct that can be directly awaited or used with other functions in the `Task` module. Instead, we receive the PID of the task process.
+However, it's important to note that when using the `Task.Supervisor.start_child/2` function, we **do not receive a task struct** that can be directly awaited or used with other functions in the `Task` module. Instead, we receive the PID of the task process.
 
-Furthermore, it's worth mentioning that when using other functions in the `Task.Supervisor` module, such as `async/3`, `async_nolink/3`, etc, the spawned task processes have a `:temporary` restart strategy, which cannot be changed. This means that if a task process crashes, it will not be automatically restarted by the supervisor.
+When using `Task.Supervisor.start_child/2` the default supervisor restart strategy is `:temporary` so if a task process crashes, it will not be automatically restarted by the supervisor. In the example above we set the startegy to `:transient` so that the supervisor restarts the crashed task.
+
+It's worth mentioning that when using other functions in the `Task.Supervisor` module, such as `async/3`, `async_nolink/3`, etc, the spawned task processes also have a `:temporary` restart strategy, which **cannot be changed**. This means that **if a task process crashes, it will not be automatically restarted by the supervisor**.
 
 ## Unlinked supervised tasks
 
@@ -118,7 +136,7 @@ To prevent linking a task with the caller process, we can utilize functions like
 
 By using these functions, the spawned tasks are not linked to the caller process. However, they are still monitored by the caller process. In the event of a task crash, the caller process remains unaffected and can still be informed about the crashed task through monitoring. Additionally, **the unlinked caller process retains the ability to await the completion of the task**.
 
-This means if we want to avoid the caller process from exiting when the spawned task process exits abnormally while also retain the ability of the caller process to await the task we can use the functions like `async_nolink` in the `Task.Supervisor` module.
+This means if we want to avoid the caller process from exiting when a spawned task process exits abnormally while also retain the ability of the caller process to await the task we can use the functions like `async_nolink` in the `Task.Supervisor` module.
 
 To gain a better understanding of this concept, let's explore some examples using our `AwesomeTaskSupervisor` that we previously started.
 
@@ -128,7 +146,7 @@ unlinked_task =
     :timer.sleep(300)
     1 + 2
   end)
-  |> IO.inspect(label: "TASK")
+  |> IO.inspect(label: "Unliked Task")
 
 supervisor_pid = Process.whereis(AwesomeTaskSupervisor)
 
@@ -149,7 +167,7 @@ Task.await(unlinked_task)
 |> IO.inspect(label: "Result from task")
 ```
 
-Note this function requires the task supervisor to have `:temporary` as the `:restart` option (the default), as `async_nolink/3` keeps a direct reference to the task which is lost if the task is restarted.
+Note this function requires the task supervisor to have `:temporary` as the `:restart` option (the default that cannot be changed), as `async_nolink/3` keeps a direct reference to the task which is lost if the task is restarted.
 
 <!-- livebook:{"break_markdown":true} -->
 
@@ -215,6 +233,8 @@ defmodule MyDownloader do
   @impl true
   def handle_info({ref, response}, state) do
     # We don't care about the DOWN message now, so let's demonitor and flush it
+    # Flushing will remove the {_, MonitorRef, _, _, _} message, if there is one, 
+    # from the caller message queue after monitoring has been stopped.
     Process.demonitor(ref, [:flush])
 
     IO.inspect(response.body, label: "Task #{inspect(ref)} completed with result")
@@ -253,9 +273,9 @@ MyDownloader.start_download(
 MyDownloader.start_download("https://invalid-file-download.invalid")
 ```
 
-In this example, all three download tasks run concurrently. Two of the download task processes succeed and send a reply message to the GenServer process, which we capture using the `handle_info({ref, response}, state)` callback. One of the task processes crashes, but the GenServer continues running since the tasks were unlinked.
+In this example, all three download tasks run concurrently. Two of the download task processes succeed and send a reply message to the GenServer process, which was captured by the `handle_info({ref, response}, state)` callback. One of the task processes crashes, but the GenServer continues running since the tasks were unlinked.
 
-Ddue to the task monitor, the GenServer was able to capture the `:DOWN` message using the `handle_info({:DOWN, ref, :process, _pid, reason}, state)` callback and was informed about the crashed task.
+Due to the task monitor, the GenServer was able to capture the `:DOWN` message using the `handle_info({:DOWN, ref, :process, _pid, reason}, state)` callback and was informed about the crashed task.
 
 <!-- livebook:{"break_markdown":true} -->
 

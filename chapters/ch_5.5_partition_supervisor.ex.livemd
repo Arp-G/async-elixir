@@ -27,7 +27,7 @@ Mix.install([
 
 A PartitionSupervisor functions similarly to a regular supervisor, but with the added capability of creating partitions.
 
-When a PartitionSupervisor is started, it will create multiple partitions and will start a process under each of the partitions.
+When a PartitionSupervisor is started, it *will create multiple partitions and will start a process under each of the partitions*.
 
 This feature becomes particularly valuable when certain processes within a system have the potential to become bottlenecks. If these processes can easily partition their state without any interdependencies, the PartitionSupervisor can be used.
 
@@ -165,7 +165,7 @@ Kino.Process.render_sup_tree(supervisor_pid)
 Notice that this time only 3 partitions were created and 3 child processes were started.
 Also notice how the partition number was passed as an argument to every child process, this is due to the use of the `with_arguments` option.
 
-The `with_arguments` option allows us to customize the arguments passed to child processes in a partitioned supervision setup. By providing a two-argument anonymous function, we can include the partition number in the arguments used to start each child process. This allows each process to have knowledge of the partition_number on which it is running.
+The `with_arguments` option allows us to customize the arguments passed to child processes in a partitioned supervision setup. By providing a two-argument anonymous function, we can include the partition number in the arguments used to start each child process. This **allows each process to have knowledge of the partition_number on which it is running**.
 
 <!-- livebook:{"break_markdown":true} -->
 

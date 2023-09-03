@@ -50,7 +50,9 @@ Task.async(fn -> :empty_task end)
 
 We get back a structure like so
 
-```
+<!-- livebook:{"force_markdown":true} -->
+
+```elixir
 %Task{
   mfa: {module, function, arrity},
   owner: owner_pid,

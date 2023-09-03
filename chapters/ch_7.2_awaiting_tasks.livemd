@@ -46,7 +46,8 @@ my_task =
   |> IO.inspect()
 
 # Notice how the above task process is linked to the caller process
-IO.inspect(Process.info(self(), :links), label: "Parent process #{inspect(self())} links")
+Process.info(self(), :links)
+|> IO.inspect(label: "Parent process #{inspect(self())} links")
 
 Task.await(my_task) |> IO.inspect(label: "Task returned")
 ```
@@ -75,7 +76,7 @@ receive do
     demonitor(ref)
     reply
 
-  # This is the message received from the task monitor, if this happens it means we received the :DOWN message without getting the reply message, which means the task crashed
+  # This is the message received from the task monitor, if this happens it means we received the :DOWN message without getting the reply message first, which means the task crashed
   {:DOWN, ^ref, _, proc, reason} ->
     # Exit the linked caller process that is awaiting since the task process crashed
     exit({reason(reason, proc), {__MODULE__, :await, [task, timeout]}})
@@ -213,7 +214,7 @@ tasks_with_results = Task.yield_many(tasks)
 
 results =
   Enum.map(tasks_with_results, fn {task, res} ->
-    # Shut down the tasks that did not reply nor exit
+    # Shut down the tasks that did not reply or exit
     res || Task.shutdown(task, :brutal_kill)
   end)
 

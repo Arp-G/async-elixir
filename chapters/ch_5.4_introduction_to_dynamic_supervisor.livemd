@@ -45,7 +45,7 @@ On the other hand, a DynamicSupervisor **starts with no children** initially. In
 
 <!-- livebook:{"break_markdown":true} -->
 
-### `Supervisor.start_child/2` vs `DynamicSupervisor.start_child/2`
+### Supervisor.start_child/2 vs DynamicSupervisor.start_child/2
 
 It may appear confusing that both the Supervisor and DynamicSupervisor modules provide a function called `start_child/2` to dynamically start supervised child processes. This raises the question of what distinguishes the two and why we have a dedicated DynamicSupervisor for dynamic child management.
 
@@ -141,7 +141,7 @@ Also similar to the regular Supervisor module when starting a DynamicSupervisor 
 
 Two new options that are available with DynamicSupervisors are
 
-* `:max_children` -  the maximum amount of children to be running under this supervisor at the same time. When :max_children is exceeded, start_child/2 returns {:error, :max_children}. Defaults to :infinity.
+* `:max_children` -  the maximum amount of children to be running under this supervisor at the same time. When `:max_children` is exceeded, `start_child/2` returns `{:error, :max_children}`. Defaults to `:infinity`.
 
 * `:extra_arguments` - arguments that are prepended to the arguments specified in the child spec given to `start_child/2`. Defaults to an empty list.
 
@@ -205,7 +205,7 @@ defmodule MyTestDynamicSupervisorV2 do
 end
 ```
 
-Few things to note in the above code snipper:
+Few things to note in the above code snippets:
 
 * We are using the `DynamicSupervisor.init/1` helper function to generate a tuple that initializes the dynamic supervisor with proper options in its `init/1` callback.
 

@@ -29,7 +29,7 @@ Mix.install([
 
 [Streams](https://hexdocs.pm/elixir/1.12/Stream.html) are a valuable feature in Elixir that allow for lazy emission of elements. Any [enumerable](https://hexdocs.pm/elixir/1.12/Enumerable.html) that generates elements one by one during enumeration is considered a stream. Streams are particularly useful when dealing with large datasets that could consume excessive memory if loaded all at once. With streams, we can manage data lazily, processing elements as needed. To learn more about Stream module check out the documentation [here](https://hexdocs.pm/elixir/1.15.0/Stream.html).
 
-Now that we have a basic understanding of streams, let's explore the exciting `Task.async_stream/3` function. This function enables concurrent processing of each element in a enumerable, unlocking significant potential for parallel execution.
+Now that we have a basic understanding of streams, let's explore the exciting `Task.async_stream/3` function. This function enables **concurrent processing of each element in a enumerable**, unlocking significant potential for parallel execution.
 
 Since `Task.async_stream/3` works on enumerables it can work on both Streams and Enums.
 

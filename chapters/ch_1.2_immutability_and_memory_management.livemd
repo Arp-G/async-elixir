@@ -23,7 +23,7 @@ In Elixir, variables function as **labels** that refer to specific values. These
 
 In Erlang, it is not possible to reassign or rebind a variable. Attempting to do so will result in an error, as demonstrated in the following code:
 
-```
+```erlang
 X = 5,
 X = X * 10.  % throws an exception error: no match of right hand side value 50
 ```
@@ -47,7 +47,7 @@ iex(3)> ^x = x * 10 # Matching
     iex:3: (file)
 ```
 
-In Elixir, any input passed into a function to be transformed creates a new value without modifying the original value. This allows for safe concurrent access to the same data by multiple processes. Since there is **no shared memory** that is getting mutated by multiple processes, concurrency is easier to manage. Any transformation on the original data will result in new data being created.
+In Elixir, any input passed into a function to be transformed creates a new value without modifying the original value. This allows for safe concurrent access to the same data by multiple processes. Since there is **no shared memory** that is getting mutated by multiple processes, concurrency is easier to manage. Any transformation on the original data will result in new data being created. Processes do not share state, they can only communicate asynchronously through message passing. This ensures it is safe to run them at the same time.
 
 ## Example of immutability & closures in elixir
 

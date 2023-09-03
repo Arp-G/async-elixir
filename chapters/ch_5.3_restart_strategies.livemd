@@ -41,6 +41,8 @@ children = [
 ]
 ```
 
+#### Modifying default child spec
+
 Alternatively, when creating a GenServer, the restart value can be specified using the `use GenServer` macro:
 
 <!-- livebook:{"force_markdown":true} -->
@@ -232,7 +234,7 @@ Two important options are:
 
 * `:max_seconds`: This option defines the time frame in which the `:max_restarts` limit applies. The default value is 5 seconds.
 
-These options determine the maximum restart intensity of a supervisor, controlling the number of restarts that can occur within a given time interval. It is part of the supervisor's built-in mechanism to manage restarts effectively.
+These options determine the maximum **restart intensity** of a supervisor, controlling the number of restarts that can occur within a given time interval. It is part of the supervisor's built-in mechanism to manage restarts effectively.
 
 **If the number of restarts exceeds the `:max_restarts` limit within the last `:max_seconds` seconds, the supervisor terminates all its child processes and itself**. In this case, the termination reason for the supervisor is `:shutdown`.
 

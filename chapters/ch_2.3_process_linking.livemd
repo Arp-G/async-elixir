@@ -64,20 +64,17 @@ In our case this also leads the linked live view process to crash.
 
 When a linked process exits gracefully with a reason `:normal` this does not lead to the parent process to crash. Any other reason other than `:normal` is considered an abnormal termination and will lead to the linked processes exiting as well.
 
-<!-- livebook:{"break_markdown":true} -->
-
-(Note that the call to Process.exit(pid, :normal) function is silently ignored if the specified pid is different from the calling process's own pid (self()). This is an edge case.)
+When a process reaches its end, by default it exits with reason `:normal`
 
 ```elixir
 linked_process =
   spawn_link(fn ->
-    # Process.exit(self(), :normal)
-    :timer.sleep(60000)
+    exit(:normal)
+    Process.sleep(60000)
   end)
 
-# Process.exit(linked_process, :normal)
 :timer.sleep(100)
-IO.puts(Process.alive?(linked_process))
+IO.inspect(Process.alive?(linked_process), label: "Linked process alive?")
 ```
 
 Linking can also be done manually by calling `Process.link/1`, lets see a bigger example...
