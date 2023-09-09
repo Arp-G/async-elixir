@@ -6,11 +6,13 @@ The **Async Elixir** book is a deep dive into Elixir's concurrency features. If 
 
 For the best learning experience, consider using this book alongside the video course (work in progress).
 
-## Getting Started
-
 [![Run in Livebook](https://livebook.dev/badge/v1/blue.svg)](https://livebook.dev/run?url=https%3A%2F%2Fgithub.com%2FArp-G%2Fasync-elixir%2Fblob%2Fmaster%2Fchapters%2Fch_0.0_start.livemd)
 
-Alternatively, ensure you have [Livebook](https://livebook.dev/) installed, then open the [Course Overview](chapters/ch_1.1_concurrency_in_elixir.livemd) file in Livebook.
+## Getting Started
+
+* Clone this repository
+* Ensure you have [Livebook](https://livebook.dev/) installed
+* Open livebook and then open the [Course Overview](chapters/ch_1.1_concurrency_in_elixir.livemd) file in Livebook.
 
 ## Course Status
 
