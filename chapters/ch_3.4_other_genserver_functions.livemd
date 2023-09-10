@@ -146,7 +146,7 @@ This is possible because the `from` parameter holds the PID of the caller along 
 
 <!-- livebook:{"break_markdown":true} -->
 
-(Note: There are 2 other functions `GenServer.abcast/3` and `GenServer.multi_call/4` which allows us to cast and call multiple GenServers at a time and can be usefull in a distributed environment.)
+(Note: There are 2 other functions `GenServer.abcast/3` and `GenServer.multi_call/4` which allows us to cast and call multiple GenServers at a time and can be useful in a distributed environment.)
 
 ## Navigation
 
