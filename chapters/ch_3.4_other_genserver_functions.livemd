@@ -33,7 +33,7 @@ To illustrate this concept, let's walk through an example.
 
 We will build a *FoodOrderingServer* which allows users to order for a food item or list past orders. Lets suppose the call to list the past order is a fast one however the call to place an order is a slow operation.
 
-Ideally we don't want to block other calls to the GenServer while its bussy placing an order.
+Ideally we don't want to block other calls to the GenServer while its busy placing an order.
 
 ```elixir
 defmodule FoodOrderingServer do
