@@ -177,7 +177,7 @@ A simplified overview of the lifecycle of a GenServer is given below
 
 Now that we have got an overview of the workings of a GenServer lets look at some gotachas and key points related to GenServers...
 
-## GenServer Key Points to Remeber
+## GenServer Key Points to Remember
 
 * A GenServer is a **single elixir process** that operates in a loop, processing messages from its mailbox in the **order** they are received.
 * If a message takes a long time to process, calling synchronous functions such as `GenServer.call/2` may result in timeouts. You can specify a longer timeout (the default is 5 seconds) or use multiple GenServers to avoid overloading a single process.
