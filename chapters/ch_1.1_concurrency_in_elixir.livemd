@@ -57,6 +57,12 @@ Similar to an operating system scheduler, the Erlang VM has the ability to start
 
 While waiting for a message, a process is completely ignored by the scheduler. As a result, **idle processes do not consume any system resources**.
 
+#### Reductions
+
+Erlang uses "reductions" as work units to decide when a process might be paused. A reduction in Erlang is a unit of work done by BEAM, including tasks like function application, arithmetic operations, and message passing. The scheduler monitors reductions for each process, pausing a process once it reaches a set reduction count, which lets another process take its turn to run. This ensures fairness in scheduling by preventing processes from hogging the CPU.
+
+Additionally, reductions are applied flexibly based on the operation type. For instance, I/O operations consume reductions differently, allowing the scheduler to handle various operations effectively. Unlike traditional blocking I/O, Erlang's non-blocking model lets processes continue working during I/O waits, improving overall system performance.
+
 <!-- livebook:{"break_markdown":true} -->
 
 #### Scheduling in BEAM
@@ -77,6 +83,8 @@ In simpler terms, if one scheduler's queue becomes crowded due to processes taki
 
 The load balancer strives to maintain an equal maximum number of run-able processes across schedulers.
 
+Looking beyond Erlang's internal run queues, the operating system also manages the scheduling of threads onto CPU cores at an OS level. This means that processes can not only swap within Erlang's run queue but also undergo complete context switches or be relocated to different cores by the OS.
+
 <!-- livebook:{"break_markdown":true} -->
 
 ![](images/beam_scheduling_architecture.svg)
@@ -94,10 +102,23 @@ System.schedulers()
 System.schedulers_online()
 ```
 
+#### Process priority
+
+Erlang's priority system has four levels: low, normal, high, and max (reserved for Erlang's internal use). Each level has its own run queue and follows a round-robin scheduling method, except for max.
+
+Processes in max or high priority queues are executed exclusively, blocking lower-priority processes until they're done. This design emphasizes efficiency for critical tasks but can cause bottlenecks if high-priority processes are overused, impacting overall application responsiveness.
+
+Low and normal queues are more flexible, allowing interleaved execution without blocking each other. However, using high priority sparingly is crucial to avoid performance issues.
+
+Additionally, Erlang permits communication across different priority levels, although a high-priority process waiting for a message from a lower-priority one will effectively lower its own priority.
+
+Process priority can be changed in elixir using `Process.flag(:priority, :high)`
+
 ## Resources
 
 * https://medium.com/flatiron-labs/elixir-and-the-beam-how-concurrency-really-works-3cc151cddd61
 * https://blog.stenmans.org/theBeamBook/#CH-Scheduling
+* https://blog.appsignal.com/2024/04/23/deep-diving-into-the-erlang-scheduler.html
 * https://fly.io/phoenix-files/a-liveview-is-a-process/
 * https://underjord.io/unpacking-elixir-concurrency.html
 

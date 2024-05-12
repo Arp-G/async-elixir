@@ -56,6 +56,8 @@ Since the code below crashes the live view process we need to comment it in orde
 # :timer.sleep(200)
 
 # IO.puts "Parent process still alive!"
+
+# Child process <-> parent process <-> Livebook evaluation process
 ```
 
 This time the print statement "Parent process still alive!" is never printed because when linked process crashes it brings down the parent process with it.
