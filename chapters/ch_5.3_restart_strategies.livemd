@@ -176,7 +176,7 @@ Supervisor.stop(supervisor_pid)
 ```elixir
 # Test abnormal termination of child with `:temporary` restart strategy
 # Notice how the GenServer is NOT restarted
-GenServer.cast(:temporary_dummy, :stop_gracefully)
+GenServer.cast(:temporary_dummy, :crash)
 ```
 
 ```elixir
