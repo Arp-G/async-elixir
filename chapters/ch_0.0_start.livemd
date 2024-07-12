@@ -92,6 +92,10 @@ I am a full-stack software engineer with four years of focused experience in Eli
 
 * 🤖 [Chapter 8: Agents](ch_8.0_agents.livemd)
 
+#### Part 9: Misc
+
+* 💡 [Chapter 9: Gotchas](ch_9.0_gotchas.livemd)
+
 ---
 
 <!-- livebook:{"break_markdown":true} -->

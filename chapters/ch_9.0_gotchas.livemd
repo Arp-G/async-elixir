@@ -1,0 +1,37 @@
+# Gotchas
+
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_8.0_agents.livemd">Agents</a>
+</div>
+</div>
+
+## Loss of sharing
+
+[Ref](https://medium.com/@johnjocoo/debugging-memory-issues-in-elixir-601c8a0a607d#2e85)
+
+In Elixir, each process manages its own memory, meaning no data is shared between processes. All data sent between processes is fully copied, which includes data written to or read from an ETS table. During this copying, data is flattened, losing any internal sharing of terms.
+
+Within a single process, however, data can be shared. For instance, if you have a list assigned to a variable, then prepend an element and assign it to another variable, the tail of the original list is shared between both variables, maintaining the same memory allocation.
+
+Consider preloading associations in Ecto, like Posts and Comments, where a post has many comments. If you fetch 1000 comments and preload their 100 associated posts, Ecto shares these posts among the comments. However, when full copying occurs, each post is duplicated for each comment, resulting in 1000 separate post entries. This process, known as flattening or "loss of sharing," leads to significant memory duplication.
+
+## Navigation
+
+<div style="display: flex; align-items: center; width: 100%; justify-content: space-between; font-size: 1rem; color: #61758a; background-color: #f0f5f9; height: 4rem; padding: 0 1rem; border-radius: 1rem;">
+<div style="display: flex;">
+<i class="ri-home-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_0.0_start.livemd">Home</a>
+</div>
+<div style="display: flex;">
+<i class="ri-arrow-left-fill"></i>
+<a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_8.0_agents.livemd">Agents</a>
+</div>
+</div>

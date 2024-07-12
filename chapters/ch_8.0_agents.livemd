@@ -11,6 +11,10 @@
 <i class="ri-arrow-left-fill"></i>
 <a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_7.4_supervised_tasks.livemd">Supervised tasks</a>
 </div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_9.0_gotchas.livemd">Gotchas</a>
+<i class="ri-arrow-right-fill"></i>
+</div>
 </div>
 
 ## Introduction
@@ -154,5 +158,9 @@ In the above code, the agent child specification is configured to have a restart
 <div style="display: flex;">
 <i class="ri-arrow-left-fill"></i>
 <a style="display: flex; color: #61758a; margin-left: 1rem;" href="ch_7.4_supervised_tasks.livemd">Supervised tasks</a>
+</div>
+<div style="display: flex;">
+<a style="display: flex; color: #61758a; margin-right: 1rem;" href="ch_9.0_gotchas.livemd">Gotchas</a>
+<i class="ri-arrow-right-fill"></i>
 </div>
 </div>
