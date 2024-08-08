@@ -96,7 +96,7 @@ GenServer.start_link(
 
 When we register a process under a Registry, we have the option to store an associated metadata with that entry. In the second example mentioned above, we not only registered an instance of our Stack GenServer process under the registry but also stored the value `:second_stack` along with its corresponding entry.
 
-Now lets call our Stack GenServer using its Registered name, we can use the `lookup/2` function that returns a list like `[{pid(), value()}]`. For Regtries that allow duplicate entries a lookup can return multiple entries in this list.
+Now lets call our Stack GenServer using its Registered name, we can use the `lookup/2` function that returns a list like `[{pid(), value()}]`. For Registries that allow duplicate entries a lookup can return multiple entries in this list.
 
 ```elixir
 # Since we use an unique Registry, its guaranteed we will only get atmost
@@ -180,7 +180,7 @@ end)
 ### Building a pubsub system with Registry
 
 We can also use this `dispatch/3` function to implement a local, non-distributed PubSub.
-This works by registering mulitples processes under a given key which acts like a pubsub topic.
+This works by registering multiple processes under a given key which acts like a pubsub topic.
 
 We can then send a message to all processes registered under a key to emulate a pubsub broadcast. Here we also set the number of partitions to the number of schedulers online, which will make the registry more performant on highly concurrent environments.
 
@@ -214,7 +214,7 @@ By using this approach, we can register multiple processes under a single key wi
 
 ## Other registry functions and match specs
 
-Apart from the `register/3` and `lookup/2` functions the Registry module has several other usefull functions which allows us to find and manipulate data inside the Registry. Most of these functions are straightforward to understand.
+Apart from the `register/3` and `lookup/2` functions, the Registry module has several other useful functions which allows us to find and manipulate data inside the Registry. Most of these functions are straightforward to understand.
 
 However, its worth noting that some functions use match specs to find matching entries from the Registry let us look at some examples to understand how match specs work.
 
@@ -224,7 +224,7 @@ From the official documentation
 
 > Optionally, it is possible to pass a list of guard conditions for more precise matching. Each guard is a tuple, which describes checks that should be passed by assigned part of pattern. For example the `$1 > 1` guard condition would be expressed as the `{:>, :"$1", 1}` tuple. Please note that guard conditions will work only for assigned variables like :"$1", :"$2", and so forth.
 
-Lets consider the `match/4` functions in the Registry module that returns entries from the Regsitry that matches the match spec passed.
+Lets consider the `match/4` functions in the Registry module that returns entries from the Registry that matches the match spec passed.
 
 ```elixir
 Registry.start_link(keys: :duplicate, name: Registry.MatchSpec)
@@ -257,7 +257,7 @@ Registry.match(Registry.MatchSpec, "my_key", :"$1", [{:is_binary, :"$1"}])
 |> IO.inspect(label: ~s(* match spec: :"$1" with guard [{:is_binary, :"$1"}] returned"))
 ```
 
-Other functions like `count_match/4`, `select/2`, etc in the Registry module also uses match specs for filtering entries in the Registry.
+Other functions like `count_match/4`, `select/2`, etc in the Registry module also use match specs for filtering entries in the Registry.
 
 ## Resources
 

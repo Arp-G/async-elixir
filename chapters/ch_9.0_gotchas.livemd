@@ -19,7 +19,7 @@
 
 In Elixir, each process manages its own memory, meaning no data is shared between processes. All data sent between processes is fully copied, which includes data written to or read from an ETS table. During this copying, data is flattened, losing any internal sharing of terms.
 
-Within a single process, however, data can be shared. For instance, if you have a list assigned to a variable, then prepend an element and assign it to another variable, the tail of the original list is shared between both variables, maintaining the same memory allocation.
+Within a single process, however, [data can be shared](ch_1.2_immutability_and_memory_management.livemd#persistent-datastructures). For instance, if you have a list assigned to a variable, then prepend an element and assign it to another variable, the tail of the original list is shared between both variables, maintaining the same memory allocation.
 
 Consider preloading associations in Ecto, like Posts and Comments, where a post has many comments. If you fetch 1000 comments and preload their 100 associated posts, Ecto shares these posts among the comments. However, when full copying occurs, each post is duplicated for each comment, resulting in 1000 separate post entries. This process, known as flattening or "loss of sharing," leads to significant memory duplication.
 
