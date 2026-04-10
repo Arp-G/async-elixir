@@ -1,3 +1,5 @@
+<!-- livebook:{"file_entries":[{"name":"genserver_lifecycle.svg","type":"attachment"}]} -->
+
 # GenServer Introduction
 
 ## Navigation
@@ -171,7 +173,7 @@ A simplified overview of the lifecycle of a GenServer is given below
 
 <!-- livebook:{"break_markdown":true} -->
 
-![](images/genserver_lifecycle.svg)
+![](files/genserver_lifecycle.svg)
 
 <!-- livebook:{"break_markdown":true} -->
 

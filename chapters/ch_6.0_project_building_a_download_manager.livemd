@@ -1,3 +1,5 @@
+<!-- livebook:{"file_entries":[{"name":"download_manager_architecture.png","type":"attachment"}]} -->
+
 # Project - Building a Download Manager 🚀
 
 ```elixir
@@ -83,7 +85,7 @@ Lets look at the high level architecture of our application.
 
 <!-- livebook:{"break_markdown":true} -->
 
-![](images/download_manager_architecture.png)
+![](files/download_manager_architecture.png)
 
 <!-- livebook:{"break_markdown":true} -->
 

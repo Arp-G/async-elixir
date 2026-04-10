@@ -1,3 +1,5 @@
+<!-- livebook:{"file_entries":[{"name":"beam_scheduling_architecture.svg","type":"attachment"},{"name":"concurrent_vs_parallel.svg","type":"attachment"}]} -->
+
 # Concurrency in Elixir
 
 ## Navigation
@@ -23,7 +25,7 @@ In essence, concurrency deals with handling multiple tasks at once, while parall
 
 <!-- livebook:{"break_markdown":true} -->
 
-![](images/concurrent_vs_parallel.svg)
+![](files/concurrent_vs_parallel.svg)
 
 <!-- livebook:{"break_markdown":true} -->
 
@@ -87,7 +89,7 @@ Looking beyond Erlang's internal run queues, the operating system also manages t
 
 <!-- livebook:{"break_markdown":true} -->
 
-![](images/beam_scheduling_architecture.svg)
+![](files/beam_scheduling_architecture.svg)
 
 <!-- livebook:{"break_markdown":true} -->
 
